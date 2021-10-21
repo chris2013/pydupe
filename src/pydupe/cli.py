@@ -19,9 +19,9 @@ log = logging.getLogger(__name__)
 
 
 @click.group()
-@click.option('-db', '--dbname', required=False, default = str(pathlib.Path.home()) + '/.pydupe.sqlite', show_default=True, help='sqlite Database')
-@click.option('-tr', '--trash', required=False, default = str(pathlib.Path.home()) + '/.pydupeTrash', show_default=True, help='path to Trash. If set to "DELETE", no trash is used.')
-@click.option('-of', '--outfile', required=False, default = str(pathlib.Path.home()) +'/dupestree.html', show_default=True, help='html output for inspection in browser')
+@click.option('-db', '--dbname', required=False, default=str(pathlib.Path.home()) + '/.pydupe.sqlite', show_default=True, help='sqlite Database')
+@click.option('-tr', '--trash', required=False, default=str(pathlib.Path.home()) + '/.pydupeTrash', show_default=True, help='path to Trash. If set to "DELETE", no trash is used.')
+@click.option('-of', '--outfile', required=False, default=str(pathlib.Path.home()) + '/dupestree.html', show_default=True, help='html output for inspection in browser')
 @click.version_option()
 @click.pass_context
 def cli(ctx, dbname, trash, outfile):
@@ -77,7 +77,7 @@ def dd(ctx, match_deletions, autoselect, dupes_global, do_move, deldir, pattern)
     outfile = ctx.obj['outfile']
     hashlu = dupetable.get_dupes(dbname)
     deltable, keeptable = dupetable.dd3(hashlu,
-        deldir, pattern, match_deletions=match_deletions, dupes_global=dupes_global, autoselect=autoselect)
+                                        deldir, pattern, match_deletions=match_deletions, dupes_global=dupes_global, autoselect=autoselect)
 
     # check keeptable
     if do_move:
