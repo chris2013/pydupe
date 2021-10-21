@@ -88,7 +88,7 @@ def do_move(dbname, *, deltable: dict, trash: str):
                 for delfile in deltable[hash]:
                     if trash == "DELETE":
                         console.print(str(delfile))
-                        delete_file(filen=delfile, trash = trash)
+                        delete_file(file=delfile, trash = trash)
                     else:
                         console.print(move_file_to_trash(
                             file=delfile, trash = trash))
