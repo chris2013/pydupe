@@ -22,6 +22,7 @@ def is_relative_to(parent: pathlib.Path, testfile: pathlib.Path) -> bool:
     cmp = [x == parent for x in testfile.parents]
     return any(cmp)
 
+
 def autoselect_(*, deltable: LuTable, keeptable: LuTable, pattern=".") -> tuple:
     """
     autoselect filters items that are contained in deltable (marked for deletion) and
@@ -47,6 +48,7 @@ def autoselect_(*, deltable: LuTable, keeptable: LuTable, pattern=".") -> tuple:
                 keeptable.add((hsh, f))
     return deltable, keeptable
 
+
 def get_dupes(dbname=str(pathlib.Path.home()) + "/" + ".pydupe.sqlite") -> None:
     hashlu = LuTable()
     with PydupeDB(dbname) as db:
@@ -54,6 +56,7 @@ def get_dupes(dbname=str(pathlib.Path.home()) + "/" + ".pydupe.sqlite") -> None:
             file_as_path = pathlib.Path(row['filename'])
             hashlu.add((row['hash'], file_as_path))
     return hashlu
+
 
 def dd3(hashlu, deldir: str, pattern: str, *, match_deletions=True, dupes_global=False, autoselect=False) -> tuple:
     """
@@ -129,6 +132,7 @@ def dd3(hashlu, deldir: str, pattern: str, *, match_deletions=True, dupes_global
                 if hash in outside_hashlu.keys():
                     deltable.lextend(outside_hashlu, hash)
     return deltable, keeptable
+
 
 def get_dir_counter(hashlu) -> collections.Counter:
     log.debug("[red]started get_dir_counter")

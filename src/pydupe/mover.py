@@ -32,7 +32,6 @@ class DupeHashNotValidated(Error):
     """Argument missing."""
 
 
-
 def move_file_to_trash(*, file: pathlib.Path, trash: str) -> str:
     assert isinstance(file, pathlib.Path)
     target = pathlib.Path(trash + str(file))
@@ -40,10 +39,12 @@ def move_file_to_trash(*, file: pathlib.Path, trash: str) -> str:
         target.parent.mkdir(parents=True)
     return str(file.rename(target))
 
+
 def delete_file(*, file: pathlib.Path, trash: str) -> None:
     assert isinstance(file, pathlib.Path)
     assert trash == "DELETE"
     file.unlink()
+
 
 def validator(table: dict) -> None:
     for _, flist in table.items():
@@ -55,11 +56,13 @@ def validator(table: dict) -> None:
             elif f.is_symlink():
                 raise DupeIsSymLink(str(f))
 
+
 def print_dupestree(*, deltable: dict, keeptable: dict, outfile: str):
     hashes_of_files_to_delete = deltable.keys()
     num_keeps = sum([len(x) for x in keeptable.values()])
     num_deletes = sum([len(x) for x in deltable.values()])
-    console.print("[red]deletions: "+str(num_deletes)+" [green]keeps: "+str(num_keeps))
+    console.print("[red]deletions: "+str(num_deletes) +
+                  " [green]keeps: "+str(num_keeps))
     dupestree = Tree(
         "Dupes Tree [red] red: dupes to be deleted [green] green: dupes to keep")
     for hash in hashes_of_files_to_delete:
@@ -71,13 +74,14 @@ def print_dupestree(*, deltable: dict, keeptable: dict, outfile: str):
     console.print(dupestree)
     console.save_html(outfile)
 
+
 def do_move(dbname, *, deltable: dict, trash: str):
     with Progress(console=console) as progress:
         hashes_of_files_to_delete = deltable.keys()
         files_to_delete = list(
             itertools.chain.from_iterable(deltable.values()))
 
-        if trash =="DELETE":
+        if trash == "DELETE":
             task_move_file_to_trash = progress.add_task(
                 "[red]deleting files ...", total=len(files_to_delete))
         else:
@@ -88,10 +92,10 @@ def do_move(dbname, *, deltable: dict, trash: str):
                 for delfile in deltable[hash]:
                     if trash == "DELETE":
                         console.print(str(delfile))
-                        delete_file(file=delfile, trash = trash)
+                        delete_file(file=delfile, trash=trash)
                     else:
                         console.print(move_file_to_trash(
-                            file=delfile, trash = trash))
+                            file=delfile, trash=trash))
                     db.delete_file(filename=str(delfile))
                     db.commit()
                     progress.update(task_move_file_to_trash, advance=1)
