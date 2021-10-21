@@ -1,19 +1,27 @@
+import logging
 import pathlib
+from datetime import datetime
 
 import click
+from rich.logging import RichHandler
 from rich.table import Table
 
-import pydupe.dupetable as Dupetable
+import pydupe.dupetable as dupetable
+import pydupe.hasher as hasher
+import pydupe.mover as mover
 from pydupe.console import console
 from pydupe.db import PydupeDB
-from pydupe.hasher import Hasher
-from pydupe.mover import Mover
+
+FORMAT = "%(threadName)s:%(message)s"
+logging.basicConfig(level=logging.NOTSET, format=FORMAT, datefmt="[%X]", handlers=[
+                    RichHandler(show_level=True, show_path=True, markup=True, console=console)])
+log = logging.getLogger(__name__)
 
 
 @click.group()
-@click.option('-db', '--dbname', required=False, default=str(pathlib.Path.home())+'/.pydupe.sqlite', show_default=True, help='sqlite Database')
-@click.option('-tr', '--trash', required=False, default='/opt/chris/.pydupeTrash', show_default=True, help='path to Trash')
-@click.option('-of', '--outfile', required=False, default=str(pathlib.Path.home())+'/dupestree.html', show_default=True, help='html output for inspection in browser')
+@click.option('-db', '--dbname', required=False, default = str(pathlib.Path.home()) + '/.pydupe.sqlite', show_default=True, help='sqlite Database')
+@click.option('-tr', '--trash', required=False, default = str(pathlib.Path.home()) + '/.pydupeTrash', show_default=True, help='path to Trash. If set to "DELETE", no trash is used.')
+@click.option('-of', '--outfile', required=False, default = str(pathlib.Path.home()) +'/dupestree.html', show_default=True, help='html output for inspection in browser')
 @click.version_option()
 @click.pass_context
 def cli(ctx, dbname, trash, outfile):
@@ -35,8 +43,8 @@ def lst(ctx, depth):
     table.add_column("Directory", justify="right", style="cyan", no_wrap=True)
     table.add_column("# of dupes", justify="left", style="green")
     dbname = ctx.obj['dbname']
-    d = Dupetable.Dupetable(dbname)
-    dc = d.get_dir_counter()
+    hashlu = dupetable.get_dupes(dbname)
+    dc = dupetable.get_dir_counter(hashlu)
     for f, c in dc.most_common(depth):
         table.add_row(f, str(c))
     console.print(table)
@@ -67,16 +75,15 @@ def dd(ctx, match_deletions, autoselect, dupes_global, do_move, deldir, pattern)
     dbname = ctx.obj['dbname']
     trash = ctx.obj['trash']
     outfile = ctx.obj['outfile']
-    d = Dupetable.Dupetable(dbname)
-    deltable, keeptable = d.dd3(
+    hashlu = dupetable.get_dupes(dbname)
+    deltable, keeptable = dupetable.dd3(hashlu,
         deldir, pattern, match_deletions=match_deletions, dupes_global=dupes_global, autoselect=autoselect)
 
     # check keeptable
-    mver = Mover(dbname)
     if do_move:
-        mver.do_move(deltable=deltable, trash=trash)
+        mover.do_move(dbname, deltable=deltable, trash=trash)
     else:
-        mver.print_dupestree(
+        mover.print_dupestree(
             deltable=deltable, keeptable=keeptable, outfile=outfile)
 
 
@@ -87,9 +94,12 @@ def hash(ctx, path):
     """
     recursive hash files in PATH and store hash in database.
     """
+    start_time = datetime.now()
     dbname = ctx.obj['dbname']
-    hsr = Hasher(dbname)
-    hsr.hashdir(path)
+    hasher.init(dbname)
+    number_scanned = hasher.hashdir(dbname, path)
+    delta = datetime.now() - start_time
+    console.print(f"[green] scanned {number_scanned} files in {delta}")
 
 
 @cli.command()

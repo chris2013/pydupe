@@ -244,7 +244,7 @@ class TestDatabase:
                 "DELETE from lookup WHERE hash = 'be1c1a22b4055523a0d736f4174ef1d6'")
             db.insert(ftuple)
             db.commit()
-            data_get = db.get_list_of_files_where_hash_is_NULL()
+            data_get = db.get_list_of_equal_sized_files_where_hash_is_NULL()
 
         assert data_get == [
             '/tests/tdata/file_exists']

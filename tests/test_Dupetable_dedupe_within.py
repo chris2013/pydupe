@@ -1,14 +1,16 @@
 import os
 import pathlib
 import tempfile
+from collections import defaultdict
 
+import pydupe.dupetable as dupetable
 import pytest
-from pydupe.dupetable import Dupetable
 from pydupe.db import PydupeDB
 
 cwd = str(pathlib.Path.cwd())
 tdata = cwd + "/pydupe/pydupe/tests/tdata/"
 home = str(pathlib.Path.home())
+
 
 @pytest.fixture
 def setup_database():
@@ -64,27 +66,25 @@ def setup_database():
 @pytest.mark.usefixtures("setup_database")
 class TestDedupeWithin:
     def test_dedupe_within(self):
-        ds = Dupetable(dbname = os.getcwd() + '/.dbtest.sqlite')
+        hashlu = dupetable.get_dupes(dbname = os.getcwd() + '/.dbtest.sqlite')
         deldir = "/tests/tdata/somedir"
-        deltable, keeptable = ds.dd3(
-            deldir, "_dupe", dupes_global=True, match_deletions=True, autoselect=False)
-        assert deltable == {
+        deltable, keeptable = dupetable.dd3(hashlu, deldir, "_dupe", dupes_global=True, match_deletions=True, autoselect=False)
+        assert deltable.as_dict_of_lists_of_str() == {
             'be1c1a22b4055523a0d736f4174ef1d6':
             ['/tests/tdata/somedir/file_is_dupe',
             '/tests/tdata/somedir/somedir2/file_is_dupe2']
         }
-        assert keeptable == {
+        assert keeptable.as_dict_of_lists_of_str() == {
             'be1c1a22b4055523a0d736f4174ef1d6':
             ['/tests/tdata/file_exists']
         }
     
     
     def test_dedupe_within_match_deletions_False(self):
-        ds = Dupetable(dbname = os.getcwd() + '/.dbtest.sqlite')
+        hashlu = dupetable.get_dupes(dbname = os.getcwd() + '/.dbtest.sqlite')
         deldir = "/tests/tdata/somedir/"
-        deltable, keeptable = ds.dd3(
-            deldir, "file_", match_deletions=False)
-        assert keeptable == {
+        _, keeptable = dupetable.dd3(hashlu, deldir, "file_", match_deletions=False)
+        assert keeptable.as_dict_of_lists_of_str() == {
             'be1c1a22b4055523a0d736f4174ef1d6':
             ['/tests/tdata/somedir/file_is_dupe',
             '/tests/tdata/somedir/somedir2/file_is_dupe2']
@@ -92,32 +92,30 @@ class TestDedupeWithin:
     
     
     def test_dedupe_within_autoselect_dupes(self):
-        ds = Dupetable(dbname = os.getcwd() + '/.dbtest.sqlite')
+        hashlu = dupetable.get_dupes(dbname = os.getcwd() + '/.dbtest.sqlite')
         deldir = "/tests/tdata/somedir"
-        deltable, keeptable = ds.dd3(
-            deldir, "_dupe", autoselect=True, dupes_global=False, match_deletions=True)
+        deltable, keeptable = dupetable.dd3(hashlu, deldir, "_dupe", autoselect=True, dupes_global=False, match_deletions=True)
     
-        assert deltable == {
+        assert deltable.as_dict_of_lists_of_str() == {
             'be1c1a22b4055523a0d736f4174ef1d6':
             ['/tests/tdata/somedir/file_is_dupe']
         }
     
-        assert keeptable == {
+        assert keeptable.as_dict_of_lists_of_str() == {
             'be1c1a22b4055523a0d736f4174ef1d6':
             ['/tests/tdata/somedir/somedir2/file_is_dupe2'],
         }
     
     
     def test_dedupe_within_dupes_global_on_match_deletions(self):
-        ds = Dupetable(dbname = os.getcwd() + '/.dbtest.sqlite')
+        hashlu = dupetable.get_dupes(dbname = os.getcwd() + '/.dbtest.sqlite')
         deldir = "/tests/tdata/somedir/somedir2"
-        deltable, keeptable = ds.dd3(
-            deldir, "file_", dupes_global=True, match_deletions=True)
-        assert deltable == {
+        deltable, keeptable = dupetable.dd3(hashlu, deldir, "file_", dupes_global=True, match_deletions=True)
+        assert deltable.as_dict_of_lists_of_str() == {
             'be1c1a22b4055523a0d736f4174ef1d6':
             ['/tests/tdata/somedir/somedir2/file_is_dupe2']
         }
-        assert keeptable == {
+        assert keeptable.as_dict_of_lists_of_str() == {
             'be1c1a22b4055523a0d736f4174ef1d6':
             ['/tests/tdata/file_exists',
             '/tests/tdata/somedir/file_is_dupe']
@@ -125,15 +123,14 @@ class TestDedupeWithin:
     
     
     def test_dedupe_within_dupes_global_on_match_keeps(self):
-        ds = Dupetable(dbname = os.getcwd() + '/.dbtest.sqlite')
+        hashlu = dupetable.get_dupes(dbname = os.getcwd() + '/.dbtest.sqlite')
         deldir = "/tests/tdata/somedir/somedir2"
-        deltable, keeptable = ds.dd3(
-            deldir, "file_", dupes_global=True, match_deletions=False, autoselect=False)
-        assert keeptable == {
+        deltable, keeptable = dupetable.dd3(hashlu, deldir, "file_", dupes_global=True, match_deletions=False, autoselect=False)
+        assert keeptable.as_dict_of_lists_of_str() == {
             'be1c1a22b4055523a0d736f4174ef1d6':
             ['/tests/tdata/somedir/somedir2/file_is_dupe2']
         }
-        assert deltable == {
+        assert deltable.as_dict_of_lists_of_str() == {
             'be1c1a22b4055523a0d736f4174ef1d6':
             ['/tests/tdata/file_exists',
             '/tests/tdata/somedir/file_is_dupe']
@@ -141,12 +138,11 @@ class TestDedupeWithin:
     
     
     def test_dedupe_within_dupes_global_off_autoselect_off(self):
-        ds = Dupetable(dbname = os.getcwd() + '/.dbtest.sqlite')
+        hashlu = dupetable.get_dupes(dbname = os.getcwd() + '/.dbtest.sqlite')
         deldir = "/tests/tdata/somedir"
-        deltable, keeptable = ds.dd3(
-            deldir, "file_", dupes_global = False, match_deletions = True, autoselect = False)
-        assert deltable == {}
-        assert keeptable == {
+        deltable, keeptable = dupetable.dd3(hashlu, deldir, "file_", dupes_global = False, match_deletions = True, autoselect = False)
+        assert deltable.as_dict_of_lists_of_str() == {}
+        assert keeptable.as_dict_of_lists_of_str() == {
             'be1c1a22b4055523a0d736f4174ef1d6':
             ['/tests/tdata/somedir/file_is_dupe',
             '/tests/tdata/somedir/somedir2/file_is_dupe2']
@@ -154,15 +150,14 @@ class TestDedupeWithin:
     
     
     def test_dedupe_within_dupes_global_off_autoselect_on(self):
-        ds = Dupetable(dbname = os.getcwd() + '/.dbtest.sqlite')
+        hashlu = dupetable.get_dupes(dbname = os.getcwd() + '/.dbtest.sqlite')
         deldir = "/tests/tdata/somedir"
-        deltable, keeptable = ds.dd3(
-            deldir, "file_", dupes_global = False, match_deletions = True, autoselect = True)
-        assert deltable == {
+        deltable, keeptable = dupetable.dd3(hashlu, deldir, "file_", dupes_global = False, match_deletions = True, autoselect = True)
+        assert deltable.as_dict_of_lists_of_str() == {
             'be1c1a22b4055523a0d736f4174ef1d6':
             ['/tests/tdata/somedir/file_is_dupe']
         }
-        assert keeptable == {
+        assert keeptable.as_dict_of_lists_of_str() == {
             'be1c1a22b4055523a0d736f4174ef1d6':
             ['/tests/tdata/somedir/somedir2/file_is_dupe2']
         }

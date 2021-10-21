@@ -62,8 +62,9 @@ class PydupeDB(object):
         update_sql = "UPDATE lookup SET hash = ? where filename = ?"
         self.cur.execute(update_sql, (hash, filename))
 
-    def get_list_of_files_where_hash_is_NULL(self):
-        get_sql = "SELECT filename FROM lookup WHERE hash IS NULL"
+    def get_list_of_equal_sized_files_where_hash_is_NULL(self):
+        # select files with same size with no hash yet
+        get_sql = "SELECT l.filename FROM lookup l JOIN (SELECT size, count(*) c FROM lookup GROUP BY size HAVING c > 1) s on l.size = s.size where l.hash is NULL"
         data_get = self.cur.execute(get_sql)
         return [d['filename'] for d in data_get]
 

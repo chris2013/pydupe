@@ -1,15 +1,23 @@
 import os
 import pathlib
 import tempfile
+from typing import DefaultDict
 
+import pydupe.dupetable as dupetable
 import pytest
+import copy
 from pydupe.db import PydupeDB
-from pydupe.dupetable import Dupetable
 
 cwd = str(pathlib.Path.cwd())
 tdata = cwd + "/pydupe/pydupe/tests/tdata/"
 home = str(pathlib.Path.home())
 
+def lu_to_str(lutable):
+    str_table = DefaultDict(list)
+    for k in lutable.keys():
+        for v in lutable[k]:
+            str_table[k].append(str(v))
+    return str_table
 
 @pytest.fixture
 def setup_database():
@@ -60,8 +68,8 @@ def setup_database():
 class TestDupetable:
 
     def test_Dupetable_basic(self):
-        ds = Dupetable(dbname=os.getcwd() + '/.dbtest.sqlite')
-        assert ds._hashlu == {
+        hashlu = dupetable.get_dupes(dbname=os.getcwd() + '/.dbtest.sqlite')
+        assert lu_to_str(hashlu) == {
             'be1c1a22b4055523a0d736f4174ef1d6': [
                 '/tests/tdata/file_exists',
                 '/tests/tdata/somedir/file_is_dupe'],
@@ -71,20 +79,20 @@ class TestDupetable:
         }
 
     def test_Dupetable_tables(self):
-        ds = Dupetable(dbname=os.getcwd() + '/.dbtest.sqlite')
+        hashlu = dupetable.get_dupes(dbname=os.getcwd() + '/.dbtest.sqlite')
         deldir = "/tests/tdata/somedir"
-        d, k = ds.dd3(deldir, pattern="_dupe", dupes_global=True)
-        assert d == {
+        d, k = dupetable.dd3(hashlu, deldir, pattern="_dupe", dupes_global=True)
+        assert lu_to_str(d) == {
             'be1c1a22b4055523a0d736f4174ef1d6':
                 ['/tests/tdata/somedir/file_is_dupe']}
-        assert k == {
+        assert lu_to_str(k) == {
             'be1c1a22b4055523a0d736f4174ef1d6':
             ['/tests/tdata/file_exists']
         }
 
     def test_dir_counter(self):
-        ds = Dupetable(dbname=os.getcwd() + '/.dbtest.sqlite')
-        dir_counter = ds.get_dir_counter()
+        hashlu = dupetable.get_dupes(dbname=os.getcwd() + '/.dbtest.sqlite')
+        dir_counter = dupetable.get_dir_counter(hashlu)
         assert dir_counter == {
             '/tests/tdata': 1,
             '/tests/tdata/somedir': 3
