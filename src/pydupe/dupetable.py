@@ -99,10 +99,7 @@ def dd3(hashlu, deldir: str, pattern: str, *, match_deletions=True, dupes_global
     # now sort the matches in deltable or keeptable and trat also global dupes
     if match_deletions:
         deltable = match_hashlu
-
-        for hash in deltable.keys():
-            if hash in no_match_hashlu.keys():
-                keeptable.lextend(no_match_hashlu, hash)
+        keeptable |= no_match_hashlu # show all keeps.
 
         if dupes_global:
             for hash in deltable.keys():

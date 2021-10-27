@@ -75,8 +75,8 @@ class TestDedupeWithin:
             '/tests/tdata/somedir/somedir2/file_is_dupe2']
         }
         assert keeptable.as_dict_of_lists_of_str() == {
-            'be1c1a22b4055523a0d736f4174ef1d6':
-            ['/tests/tdata/file_exists']
+            '3aa2ed13ee40ba651e87a0fd60b753d0': ['/tests/tdata/somedir/dupe_in_dir', '/tests/tdata/somedir/dupe2_in_dir'],
+            'be1c1a22b4055523a0d736f4174ef1d6': ['/tests/tdata/file_exists']
         }
     
     
@@ -102,9 +102,8 @@ class TestDedupeWithin:
         }
     
         assert keeptable.as_dict_of_lists_of_str() == {
-            'be1c1a22b4055523a0d736f4174ef1d6':
-            ['/tests/tdata/somedir/somedir2/file_is_dupe2'],
-        }
+            '3aa2ed13ee40ba651e87a0fd60b753d0': ['/tests/tdata/somedir/dupe_in_dir', '/tests/tdata/somedir/dupe2_in_dir'],
+            'be1c1a22b4055523a0d736f4174ef1d6': ['/tests/tdata/somedir/somedir2/file_is_dupe2']}
     
     
     def test_dedupe_within_dupes_global_on_match_deletions(self):
@@ -143,9 +142,8 @@ class TestDedupeWithin:
         deltable, keeptable = dupetable.dd3(hashlu, deldir, "file_", dupes_global = False, match_deletions = True, autoselect = False)
         assert deltable.as_dict_of_lists_of_str() == {}
         assert keeptable.as_dict_of_lists_of_str() == {
-            'be1c1a22b4055523a0d736f4174ef1d6':
-            ['/tests/tdata/somedir/file_is_dupe',
-            '/tests/tdata/somedir/somedir2/file_is_dupe2']
+            '3aa2ed13ee40ba651e87a0fd60b753d0': ['/tests/tdata/somedir/dupe_in_dir', '/tests/tdata/somedir/dupe2_in_dir'],
+            'be1c1a22b4055523a0d736f4174ef1d6': ['/tests/tdata/somedir/file_is_dupe', '/tests/tdata/somedir/somedir2/file_is_dupe2']
         }
     
     
@@ -158,6 +156,6 @@ class TestDedupeWithin:
             ['/tests/tdata/somedir/file_is_dupe']
         }
         assert keeptable.as_dict_of_lists_of_str() == {
-            'be1c1a22b4055523a0d736f4174ef1d6':
-            ['/tests/tdata/somedir/somedir2/file_is_dupe2']
+            '3aa2ed13ee40ba651e87a0fd60b753d0': ['/tests/tdata/somedir/dupe_in_dir', '/tests/tdata/somedir/dupe2_in_dir'],
+            'be1c1a22b4055523a0d736f4174ef1d6': ['/tests/tdata/somedir/somedir2/file_is_dupe2']
         }
