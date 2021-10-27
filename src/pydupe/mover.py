@@ -45,8 +45,8 @@ def move_file_to_trash(*, file: pathlib.Path, trash: str) -> str:
     
         try:
             file.rename(target)
-        except OSError as err:
-            if err.errno == 18:
+        except OSError as e:
+            if e.errno == 18:
                 console.print("[red]copying instead of renaming, put trash on the same filesystem to be faster!")
                 try:
                     copy_file(source = file, target = target)
