@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pydupe',
-    version='1.0.0',
+    version='1.0.1',
     author = 'C. Sachs',
     author_email = 'python@sachsmail.de',
     description = 'A Package to deal with dupes',
