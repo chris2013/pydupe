@@ -1,16 +1,13 @@
 import collections
 import copy
 import itertools
-import logging
 import pathlib
 import re
-
+ 
 from rich.logging import RichHandler
 
 from pydupe.db import PydupeDB
 from pydupe.lutable import LuTable
-
-log = logging.getLogger(__name__)
 
 
 def is_relative_to(parent: pathlib.Path, testfile: pathlib.Path) -> bool:
@@ -102,10 +99,7 @@ def dd3(hashlu, deldir: str, pattern: str, *, match_deletions=True, dupes_global
     # now sort the matches in deltable or keeptable and trat also global dupes
     if match_deletions:
         deltable = match_hashlu
-
-        for hash in deltable.keys():
-            if hash in no_match_hashlu.keys():
-                keeptable.lextend(no_match_hashlu, hash)
+        keeptable |= no_match_hashlu # show all keeps.
 
         if dupes_global:
             for hash in deltable.keys():
@@ -135,10 +129,8 @@ def dd3(hashlu, deldir: str, pattern: str, *, match_deletions=True, dupes_global
 
 
 def get_dir_counter(hashlu) -> collections.Counter:
-    log.debug("[red]started get_dir_counter")
     alldupes = itertools.chain.from_iterable(hashlu.values())
     dir_counter = collections.Counter()
     for x in alldupes:
         dir_counter.update({str(x.parent): 1})
-    log.debug("[green]finished get_dir_counter")
     return dir_counter

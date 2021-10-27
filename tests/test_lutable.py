@@ -43,6 +43,12 @@ class TestLuTable:
         a.lor(b)
         assert repr(a) == "LuTable([(1, 2), (3, 4), (3, 5)])"
 
+    def test_or(self):
+        a = LuTable([(1,2),(3,4)])
+        b = LuTable([(3,5),(4,6)])
+        a|=b
+        assert repr(a) == "LuTable([(1, 2), (3, 4), (3, 5), (4, 6)])"
+
     def test_ldel(self):
         a = LuTable([(1,2),(3,4), (3,5),(4,6),(4,7),(5,8)])
         a.ldel([3,4])

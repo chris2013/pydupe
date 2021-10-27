@@ -1,23 +1,14 @@
 import os
 import pathlib
 import tempfile
-from typing import DefaultDict
 
 import pydupe.dupetable as dupetable
 import pytest
-import copy
 from pydupe.db import PydupeDB
 
 cwd = str(pathlib.Path.cwd())
 tdata = cwd + "/pydupe/pydupe/tests/tdata/"
 home = str(pathlib.Path.home())
-
-def lu_to_str(lutable):
-    str_table = DefaultDict(list)
-    for k in lutable.keys():
-        for v in lutable[k]:
-            str_table[k].append(str(v))
-    return str_table
 
 @pytest.fixture
 def setup_database():
@@ -69,7 +60,7 @@ class TestDupetable:
 
     def test_Dupetable_basic(self):
         hashlu = dupetable.get_dupes(dbname=os.getcwd() + '/.dbtest.sqlite')
-        assert lu_to_str(hashlu) == {
+        assert hashlu.as_dict_of_lists_of_str() == {
             'be1c1a22b4055523a0d736f4174ef1d6': [
                 '/tests/tdata/file_exists',
                 '/tests/tdata/somedir/file_is_dupe'],
@@ -82,12 +73,12 @@ class TestDupetable:
         hashlu = dupetable.get_dupes(dbname=os.getcwd() + '/.dbtest.sqlite')
         deldir = "/tests/tdata/somedir"
         d, k = dupetable.dd3(hashlu, deldir, pattern="_dupe", dupes_global=True)
-        assert lu_to_str(d) == {
+        assert d.as_dict_of_lists_of_str() == {
             'be1c1a22b4055523a0d736f4174ef1d6':
                 ['/tests/tdata/somedir/file_is_dupe']}
-        assert lu_to_str(k) == {
-            'be1c1a22b4055523a0d736f4174ef1d6':
-            ['/tests/tdata/file_exists']
+        assert k.as_dict_of_lists_of_str() =={
+            '3aa2ed13ee40ba651e87a0fd60b753d0': ['/tests/tdata/somedir/dupe_in_dir', '/tests/tdata/somedir/dupe2_in_dir'],
+            'be1c1a22b4055523a0d736f4174ef1d6': ['/tests/tdata/file_exists']
         }
 
     def test_dir_counter(self):

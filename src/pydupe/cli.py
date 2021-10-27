@@ -13,7 +13,7 @@ from pydupe.console import console
 from pydupe.db import PydupeDB
 
 FORMAT = "%(threadName)s:%(message)s"
-logging.basicConfig(level=logging.NOTSET, format=FORMAT, datefmt="[%X]", handlers=[
+logging.basicConfig(level=logging.WARNING, format=FORMAT, datefmt="[%X]", handlers=[
                     RichHandler(show_level=True, show_path=True, markup=True, console=console)])
 log = logging.getLogger(__name__)
 

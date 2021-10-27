@@ -4,7 +4,18 @@ from typing import Tuple
 
 
 class LuTable(MutableSet):
+    """
+    class used to represent an Lookup Table for File Hashes. This is basically a Dictionary with hashvalue as key and a list of files as values.
+    A LuTable is therefore an intermediate between a Mapping and a Set. The set is implemented as list and not as set() objects for performance reasons:
+    A set is faster for searching and membership testing, but has a high memory overhead. In contrast lists have low memory overhead but slower membership testing.
+    However, the list of files is typically in the order of 10th, therefore memory impact was rated more severy. To speedup adding of elements, the list is implemented
+    as collections.deque objects. See for further reference:
+    https://docs.python.org/3/library/collections.abc.html
+    https://code.activestate.com/recipes/576694/
 
+    A mapping to the hashes is supplied together with set operations for the values. 
+
+    """
     def __init__(self, iterable=None) -> None:
         self._hashlu = {}
         if iterable is not None:
