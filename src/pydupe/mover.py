@@ -35,29 +35,32 @@ class DupeHashNotValidated(Error):
 
 def copy_file(*, source: pathlib.Path, target: pathlib.Path) -> None:
     assert source.is_file()
-    shutil.copy(str(source), str(target))  # str() only there for Python < (3, 6)
+    # str() only there for Python < (3, 6)
+    shutil.copy(str(source), str(target))
+
 
 def move_file_to_trash(*, file: pathlib.Path, trash: str) -> str:
     assert isinstance(file, pathlib.Path)
     target = pathlib.Path(trash + str(file))
     if not target.parent.is_dir():
         target.parent.mkdir(parents=True)
-    
-        try:
-            file.rename(target)
-        except OSError as e:
-            if e.errno == 18:
-                console.print("[red]copying instead of renaming, put trash on the same filesystem to be faster!")
-                try:
-                    copy_file(source = file, target = target)
-                except:
-                    raise
-                else:
-                    delete_file(file = file, trash = "DELETE")
-            else:
-                raise
 
-    return str(file.rename(target))
+    try:
+        file.rename(target)
+    except OSError as e:
+        if e.errno == 18:
+            console.print(
+                "[red]copying instead of renaming, put trash on the same filesystem to be faster!")
+            try:
+                copy_file(source=file, target=target)
+            except:
+                raise
+            else:
+                delete_file(file=file, trash="DELETE")
+    else:
+        raise
+
+    return str(target)
 
 
 def delete_file(*, file: pathlib.Path, trash: str) -> None:

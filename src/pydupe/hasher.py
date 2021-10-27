@@ -12,13 +12,14 @@ from pydupe.console import console
 from pydupe.db import PydupeDB
 
 FORMAT = "%(message)s"
-logging.basicConfig(level=logging.NOTSET, format=FORMAT, datefmt="[%X]", handlers=[
+logging.basicConfig(level=logging.WARNING, format=FORMAT, datefmt="[%X]", handlers=[
                     RichHandler(show_level=True, show_path=True, markup=True, console=console)])
 log = logging.getLogger(__name__)
 
 
 def init(dbname=str(pathlib.Path.home()) + "/" + ".pydupe.sqlite"):
     rehash_rows_where_hash_is_NULL(_dbname=dbname)
+
 
 def hashdir(_dbname, path: str):
     with Progress() as progress:
@@ -114,6 +115,7 @@ def rehash_rows_where_hash_is_NULL(_dbname):
                 db.commit()
                 progress.update(task_commit, advance=1)
     return len(list_of_files_to_update)
+
 
 def get_stats_of_file(item: pathlib.Path) -> tuple:
     mode, inode, dev, nlink, uid, gid, size, atime, mtime, ctime = item.stat()
