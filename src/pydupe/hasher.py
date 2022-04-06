@@ -125,7 +125,7 @@ class Hasher:
         if not list_of_files_to_update:
             list_of_files_to_update = self.get_dupes_where_hash_is_NULL()
 
-        filelist_chunked = list(chunked(list_of_files_to_update, 50))
+        filelist_chunked = list(chunked(list_of_files_to_update, 1000))
 
         with Progress(console=console, auto_refresh=False) as progress:
             if count := len(filelist_chunked):

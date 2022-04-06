@@ -20,9 +20,10 @@ valid_sha256 = re.compile(r"^[a-f0-9]{64}(:.+)?$", re.IGNORECASE)
 # 187.96 sec (w/  executemany, w/ attrs, w/ validation)
 # difference: 3.5 %
 
-# 194.84 sec w/ sqlite3.executemany, w/attrs, w/  validation
-# 188.99 sec w/ sqlite3.executemany, w/attrs, w/o validation
-# difference: 3%
+# 194.84 sec w/ sqlite3.executemany, w/attrs, w/  validation, chunkĺength 50
+# (188.99 sec w/ sqlite3.executemany, w/attrs, w/o validation, chunklength 50)
+# 168.64 sec w/ sqlite3.executemany, w/attrs, w/o validation, chunklength 1000
+# difference: 13%
 
 # decision: take attrs with hash validation and use sqlite3.executemany
 
