@@ -12,14 +12,24 @@ valid_sha256 = re.compile(r"^[a-f0-9]{64}(:.+)?$", re.IGNORECASE)
 # difference: 5%
 
 # w/  attrs: 194.84 sec (w/ validation)
-# w/o attrs: 175.92 sec (w/ validation)
+# w/o attrs: 175.92 sec
 # difference: 10%
+
+# with sqlite3.executemany:
+# 194.84 sec (w/o executemany, w/ attrs, w/ validation)
+# 187.96 sec (w/  executemany, w/ attrs, w/ validation)
+# difference: 3.5 %
+
+# 194.84 sec w/ sqlite3.executemany, w/attrs, w/  validation
+# 188.99 sec w/ sqlite3.executemany, w/attrs, w/o validation
+# difference: 3%
+
+# decision: take attrs with hash validation and use sqlite3.executemany
 
 @attrs.define(slots=True, kw_only=True, order=True)
 class fparms:
     filename: Optional[str] = None
     hash: Optional[str] = attrs.field(default=None)
-    #attrs.field(validator=attrs.validators.matches_re(valid_sha256))
     size: Optional[int] = None
     inode: Optional[int] = None
     mtime: Optional[float] = None
@@ -36,11 +46,3 @@ class fparms:
     @classmethod
     def from_row(cls, row: sqlite3.Row) -> 'fparms':
         return cls(filename=row['filename'], hash=row['hash'], size=row['size'], inode=row['inode'], mtime=row['mtime'], ctime=row['ctime'])
-
-if __name__ == "__main__":
-    a = fparms(hash = "1234567890123456789012345678901234567890123456789012345678901234")
-    b = fparms(filename="test")
-    print(a)
-    print(b)
-    c = fparms(hash = "wrong")
-    print(c)
