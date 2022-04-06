@@ -38,8 +38,7 @@ def setup_database() -> tp.Generator[None,None,None]:
              ctime=1630424506)]
 
         with PydupeDB(dbname) as db:
-            for d in data:
-                db.parms_insert(d)
+            db.parms_insert(data)
             db.commit()
 
         yield
@@ -119,7 +118,7 @@ class TestDatabase:
         with PydupeDB(dbname) as db:
             filename = '/tests/tdata/somedir/dupe2_in_dir'
             hash = '3aa2ed13ee40ba651e87a0fd60bbbbbb3aa2ed13ee40ba651e87a0fd60bbbbbb'
-            db.update_hash(filename, hash)
+            db.update_hash([(hash, filename)])
             db.commit()
         # after:
         with PydupeDB(dbname) as db:
@@ -188,7 +187,7 @@ class TestDatabase:
         with PydupeDB(dbname) as db:
             filename = '/tests/tdata/somedir/dupe2_in_dir'
             hash = '3aa2ed13ee40ba651e87a0fd60bbbbbb3aa2ed13ee40ba651e87a0fd60bbbbbb'
-            db.update_hash(filename, hash)
+            db.update_hash([(hash, filename)])
             # no commit -> auto rollback by context manager
 
         with PydupeDB(dbname) as db:
@@ -223,13 +222,13 @@ class TestDatabase:
     def test_get_list_of_files_where_hash_is_NULL(self) -> None:
         
         dbname = pl.Path.cwd() / ".dbtest.sqlite"
-        data = fparms(
+        data = [fparms(
             filename='/tests/tdata/file_exists',
             hash=None,
             size=1,
             inode=25303464,
             mtime=1629356592,
-            ctime=1630424506)
+            ctime=1630424506)]
 
         with PydupeDB(dbname) as db:
             db.execute(
@@ -368,10 +367,8 @@ class TestDatabase:
         dbname = pl.Path.cwd() / ".dbtest.sqlite"
         with PydupeDB(dbname) as db:
             db.execute("INSERT INTO permanent SELECT * FROM lookup WHERE filename like '/tests/tdata/somedir%'")
-            db.update_hash(
-                '/tests/tdata/file_exists', hash = None)
-            db.update_hash(
-                '/tests/tdata/somedir/file_is_dupe', hash = None)
+            db.update_hash([(None, '/tests/tdata/file_exists')])
+            db.update_hash([(None, '/tests/tdata/somedir/file_is_dupe')])
             db.commit()
             data_get_lookup = db.execute('SELECT * FROM lookup').fetchall()
             data_get_permanent = db.execute('SELECT * FROM permanent').fetchall()

@@ -32,7 +32,7 @@ class Test_check:
             hsh = Hasher(dbname)
             hsh.hashdir(cwd)
             with PydupeDB(dbname) as db:
-                db.update_hash(str(file_is_dupe), None)
+                db.update_hash([(None, str(file_is_dupe))])
                 db.commit()
 
             hsh = Hasher(dbname)

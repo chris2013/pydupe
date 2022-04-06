@@ -93,6 +93,7 @@ class Hasher:
                     "[green] get file statistics ...", start=False)
                 filelist = list(path.rglob("*"))
                 progress.update(task, total=len(filelist))
+                list_of_fparms: list[fparms] = []
                 for item in filelist:
                     progress.update(task, advance=1)
                     if item.is_file() and not item.is_symlink():    # only files and no symlink make it into database
@@ -100,8 +101,8 @@ class Hasher:
                             pass                                    # do not recurse hidden dirs and hidden files
                         else:
                             i += 1
-                            fparm = fparms.from_path(item) 
-                            db.parms_insert(fparm)
+                            list_of_fparms.append(fparms.from_path(item))
+                db.parms_insert(list_of_fparms)
             db.commit()
 
         return i
@@ -141,6 +142,7 @@ class Hasher:
                     done_iter = concurrent.futures.as_completed(to_do_map)
 
                 with PydupeDB(self._dbname) as db:
+                    hashlist: list[tuple[tp.Optional[str], str]] = []
                     for future in done_iter:
                         file = to_do_map[future]
                         try:
@@ -148,7 +150,8 @@ class Hasher:
                         except Exception as exc:
                             raise OSError("exception processing file {file}")
 
-                        db.update_hash(filename=file, hash=hash)
+                        hashlist.append((hash, file))
+                    db.update_hash(hashlist)
                     db.commit()
 
                     progress.update(task_commit, advance=1)

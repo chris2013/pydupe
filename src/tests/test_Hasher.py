@@ -108,7 +108,7 @@ class TestHasher:
 
         with PydupeDB(dbname) as db:
             for file, hash in zip(filelist, hashlist):
-                db.update_hash(str(file), hash)
+                db.update_hash([(hash, str(file))])
             db.commit()
 
         with PydupeDB(dbname) as db:
@@ -116,7 +116,7 @@ class TestHasher:
 
         with PydupeDB(dbname) as db:
             for file in filelist:
-                db.update_hash(str(file), None)
+                db.update_hash([(None, str(file))])
             db.commit()
 
         hsh.rehash_dupes_where_hash_is_NULL()

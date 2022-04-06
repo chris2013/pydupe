@@ -51,17 +51,18 @@ class PydupeDB(object):
         self.connection.close()
         return ext_type is None
 
-    def parms_insert(self,fparms: fparms) -> None:
+    def parms_insert(self,item: list[fparms]) -> None:
+        list_of_tupls=[(fparm.filename, fparm.hash, fparm.size, fparm.inode, fparm.mtime, fparm.ctime) for fparm in item]
         insert_sql = "INSERT INTO lookup (filename, hash, size, inode, mtime, ctime) VALUES (?,?,?,?,?,?)"
-        self.cur.execute(insert_sql, (fparms.filename, fparms.hash, fparms.size, fparms.inode, fparms.mtime, fparms.ctime))
+        self.cur.executemany(insert_sql, list_of_tupls) 
 
     def get(self) -> sqlite3.Cursor:
         get_sql = "SELECT * FROM lookup"
         return self.cur.execute(get_sql)
 
-    def update_hash(self, filename: str, hash: tp.Optional[str]) -> None:
+    def update_hash(self, list_of_tupl: list[tuple[tp.Optional[str],str]])-> None:
         update_sql = "UPDATE lookup SET hash = ? where filename = ?"
-        self.cur.execute(update_sql, (hash, filename))
+        self.cur.executemany(update_sql, list_of_tupl)
 
     def get_list_of_equal_sized_files_where_hash_is_NULL(self) -> tp.List[str]:
         # select files with same size with no hash yet

@@ -37,8 +37,7 @@ def setup_database() -> tp.Generator[tp.Any, tp.Any, tp.Any]:
         ]
 
         with PydupeDB(dbname) as db:
-            for d in data:
-                db.parms_insert(d)
+            db.parms_insert(data)
             db.commit()
 
         yield
