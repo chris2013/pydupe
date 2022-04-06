@@ -473,12 +473,3 @@ class TestDatabase:
              'inode': 25303464,
              'mtime': 1629356592,
              'ctime': 1630424506}]
-
-        with PydupeDB(dbname) as db:
-            db.clear_permanent()
-            db.commit()
-            data_get_permanent = db.execute('SELECT * FROM permanent').fetchall()
-
-        data_dict_permanent = [dict(row) for row in data_get_permanent]
-        
-        assert data_dict_permanent == []

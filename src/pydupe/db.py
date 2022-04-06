@@ -56,10 +56,6 @@ class PydupeDB(object):
         insert_sql = "INSERT INTO lookup (filename, hash, size, inode, mtime, ctime) VALUES (?,?,?,?,?,?)"
         self.cur.executemany(insert_sql, list_of_tupls) 
 
-    def get(self) -> sqlite3.Cursor:
-        get_sql = "SELECT * FROM lookup"
-        return self.cur.execute(get_sql)
-
     def update_hash(self, list_of_tupl: list[tuple[tp.Optional[str],str]])-> None:
         update_sql = "UPDATE lookup SET hash = ? where filename = ?"
         self.cur.executemany(update_sql, list_of_tupl)
@@ -69,16 +65,6 @@ class PydupeDB(object):
         get_sql = "SELECT l.filename FROM lookup l JOIN (SELECT size, count(*) c FROM lookup GROUP BY size HAVING c > 1) s on l.size = s.size where l.hash is NULL"
         data_get = self.cur.execute(get_sql)
         return [d['filename'] for d in data_get]
-
-    def get_list_of_files_in_dir(self, dirname: str) -> tp.List[str]:
-        get_sql = "SELECT filename FROM lookup WHERE filename LIKE ?"
-        data_get = self.cur.execute(get_sql, (dirname + '%',))
-        return [d['filename'] for d in data_get]
-
-    def get_file_hash(self) -> sqlite3.Cursor:
-        get_sql = "SELECT filename, hash from lookup"
-        self.cur.execute(get_sql)
-        return self.cur
 
     def get_dupes(self) -> sqlite3.Cursor:
         get_sql = "SELECT l.filename, l.hash FROM lookup l JOIN (SELECT hash, count(*) c FROM lookup GROUP BY hash HAVING c > 1) h on l.hash = h.hash order by l.hash"
@@ -125,10 +111,6 @@ class PydupeDB(object):
             """
         self.cur.execute(updateLookup_sql)
 
-    def clear_permanent(self) -> None:
-        deletepermanent_sql = "DELETE from permanent"
-        self.cur.execute(deletepermanent_sql)
-
     def execute(self, sql: str) -> sqlite3.Cursor:
         return self.cur.execute(sql)
 
@@ -144,3 +126,21 @@ class PydupeDB(object):
         delete_sql = "DELETE from lookup"
         self.cur.execute(delete_sql)
         self.commit()
+
+    # for testing only
+    def get(self) -> sqlite3.Cursor:
+        get_sql = "SELECT * FROM lookup"
+        return self.cur.execute(get_sql)
+
+    # for testing only
+    def get_list_of_files_in_dir(self, dirname: str) -> tp.List[str]:
+        get_sql = "SELECT filename FROM lookup WHERE filename LIKE ?"
+        data_get = self.cur.execute(get_sql, (dirname + '%',))
+        return [d['filename'] for d in data_get]
+
+    # for testing only
+    def get_file_hash(self) -> sqlite3.Cursor:
+        get_sql = "SELECT filename, hash from lookup"
+        self.cur.execute(get_sql)
+        return self.cur
+
