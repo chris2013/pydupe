@@ -3,7 +3,7 @@ import pathlib
 import typing
 from datetime import datetime
 
-import click
+import rich_click as click
 
 import pydupe.dupetable as dupetable
 from pydupe.console import console 

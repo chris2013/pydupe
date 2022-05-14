@@ -25,7 +25,8 @@ setup(
         'more_itertools>=8.12.0',
         'types-setuptools>=57.4.9',
         'attrs',
-        'typing'
+        'typing',
+        'rich-click'
     ],
     entry_points={
         'console_scripts': [
