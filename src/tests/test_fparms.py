@@ -1,4 +1,3 @@
-from numpy import size
 import pytest
 import pathlib as pl
 import tempfile
