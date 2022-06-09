@@ -6,6 +6,7 @@ import re
 import shutil
 import sys
 import typing as tp
+import shutil
 
 from more_itertools import chunked
 from rich.logging import RichHandler
@@ -49,8 +50,9 @@ class DupeNotValidated(Error):
     """Argument missing."""
 
 
-def check_file(file: pl.Path) -> pl.Path:
+def rename_if_exists(file: pl.Path) -> pl.Path:
     # rename if file exists
+
     if file.exists():
         numb = 1
         file_stem = file.stem
@@ -62,22 +64,9 @@ def check_file(file: pl.Path) -> pl.Path:
                 return newPath
     return file
 
-
-def copy_file(*, source: pl.Path, target: pl.Path) -> None:
-    assert isinstance(source, pl.Path)
-    assert source.is_file()
-    shutil.copy(str(source), str(target))
-
-
-def delete_file(*, file: pl.Path, trash: str) -> str:
-    assert isinstance(file, pl.Path)
-    assert trash == "DELETE"
-    file.unlink()
-    return str(file)
-
-
 def move_file_to_trash(*, file: pl.Path, trash: str) -> str:
     assert isinstance(file, pl.Path)
+
     if cnf['SYSTEM'] == 'Windows':
         addpath = list(file.parts[1:])
         target = pl.Path(trash)
@@ -86,23 +75,27 @@ def move_file_to_trash(*, file: pl.Path, trash: str) -> str:
     else:
         target = pl.Path(str(trash) + str(file))
 
-    if not target.parent.is_dir():
-        target.parent.mkdir(parents=True)
+    target = rename_if_exists(target)
 
-    target = check_file(target)
-
-    try:
-        file.rename(target)
-    except OSError as e:
-        if e.errno == 18:
-            try:
-                copy_file(source=file, target=target)
-            except:
-                raise
-            else:
-                delete_file(file=file, trash="DELETE")
-        else:
-            raise
+    # this was an issue with freebsd during moving across filesystems
+    # try:
+    #     file.rename(target)
+    # except OSError as e:
+    #     if e.errno == 18:
+    #         try:
+    #             copy_file(source=file, target=target)
+    #         except:
+    #             raise
+    #         else:
+    #             delete_file(file=file, trash="DELETE")
+    #     else:
+    #         raise
+    if trash == 'DELETE':
+        file.unlink()
+    else:
+        if not target.parent.is_dir():
+            target.parent.mkdir(parents=True)
+        shutil.move(src = file, dst = target)
 
     return str(file)
 

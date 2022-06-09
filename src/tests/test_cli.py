@@ -1,11 +1,11 @@
 import os
 import pathlib
 import tempfile
+import shutil
 
 import pytest
 from click.testing import CliRunner
 from pydupe.cli import cli
-from pydupe.dupetable import copy_file
 import typing as tp
 
 
@@ -50,7 +50,7 @@ def setup_tmp_path() -> tp.Iterator[pathlib.Path]:
         target_lst = [somefile1_cpy, somefile2_cpy, somefile3_cpy,
                       somefile4_cpy, somefile5_cpy, somefile6_cpy]
         for source, target in zip(source_lst, target_lst):
-            copy_file(source=source, target=target)
+            shutil.copy2(src = source, dst= target, follow_symlinks=False )
 
         runner = CliRunner()
         runner.invoke(cli, ['--dbname', dbname, 'hash', tmpdirname])
@@ -78,7 +78,7 @@ class TestCLI:
         assert result == {'file1', 'file2',
                           'file3', 'file4', 'file5', 'file6', }
 
-    def test_do_move_with_check_file_1(self, setup_tmp_path: pathlib.Path) -> None:
+    def test_do_move_with_rename_file_1(self, setup_tmp_path: pathlib.Path) -> None:
         tmpdirname = setup_tmp_path
         trash = tmpdirname / '.pydupeTrash'
         trash.mkdir()
@@ -101,7 +101,7 @@ class TestCLI:
         assert result == {'file1', 'file1_1', 'file2',
                           'file3', 'file4', 'file5', 'file6', }
 
-    def test_do_move_with_check_file_2(self, setup_tmp_path: pathlib.Path) -> None:
+    def test_do_move_with_rename_file_2(self, setup_tmp_path: pathlib.Path) -> None:
         tmpdirname = setup_tmp_path
         trash = tmpdirname / '.pydupeTrash'
         trash.mkdir()
@@ -148,3 +148,36 @@ class TestCLI:
 
         assert result == {'file1', 'file2',
                           'file3', 'file4', 'file5', 'file6', }
+
+    def test_delete_file(self, setup_tmp_path: pathlib.Path) -> None:
+        tmpdirname = setup_tmp_path
+        trash = tmpdirname / '.pydupeTrash'
+        trash.mkdir()
+
+        path = pathlib.Path(str(trash) + str(tmpdirname) + '/somedir/somedir2')
+        path.mkdir(parents=True)
+        fileexist1 = path.joinpath('file1')
+        fileexist1.write_text('some content 1')
+
+        fileexist2 = path.joinpath('file1_1')
+        fileexist2.write_text('some content 1')
+
+        runner = CliRunner()
+        runner.invoke(cli, ['--dbname', str(tmpdirname / '.testdb.sqlite'),
+                     'dd', '-tr', 'DELETE', '--do_move', 'somedir/somedir2'])
+
+        result = set()
+        fldr = tmpdirname / 'somedir/somedir2'
+        for child in fldr.rglob('*'):
+            if child.is_file():
+                result.add(child.name)
+
+        assert result == set()
+
+        result = set()
+        fldr = tmpdirname
+        for child in fldr.rglob('*'):
+            if child.is_dir():
+                result.add(child.name)
+
+        assert 'DELETE' not in result
