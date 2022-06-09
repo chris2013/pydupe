@@ -6,7 +6,7 @@ import pytest
 from pydupe.config import cnf
 from pydupe.db import PydupeDB
 from pydupe.hasher import Hasher, hash_file
-from pydupe.data import fparms
+from pydupe.data import fparms, from_path, from_row
 
 @pytest.fixture(scope='function')
 def setup_tmp_path() -> tp.Generator[tp.Any, tp.Any, tp.Any]:
@@ -44,7 +44,7 @@ def sqlite3_dictsort(lst: tp.List[dict[str, str]])-> tp.List[dict[str, str]]:
 # @pytest.mark.usefixtures("setup_tmp_path")
 
 class TestHasher:
-    def test_fixture(self, setup_tmp_path: str) -> None:
+    def test_fixture_and_from_row(self, setup_tmp_path: str) -> None:
         tmpdirname = setup_tmp_path
         dbname = pl.Path(tmpdirname + "/.test_Hasher.sqlite")
         path = pl.Path(tmpdirname + "/somedir")
@@ -53,9 +53,9 @@ class TestHasher:
         hsh.scan_files_on_disk_and_insert_stats_in_db(path)
         data_should: tp.List[tp.Optional[fparms]] = []
         for item in path.rglob("*"):
-            data_should.append(fparms.from_path(item))
+            data_should.append(from_path(item))
 
-        data_get = [fparms.from_row(d) for d in PydupeDB(dbname).get().fetchall()]
+        data_get = [from_row(d) for d in PydupeDB(dbname).get().fetchall()]
 
         assert data_get.sort() == data_should.sort()
 
@@ -72,17 +72,17 @@ class TestHasher:
 
         data_should_permanent: tp.List[tp.Optional[fparms]] = []
         for item in path_2.rglob("*"):
-            data_should_permanent.append(fparms.from_path(item))
+            data_should_permanent.append(from_path(item))
 
         data_should_lookup: tp.List[tp.Optional[fparms]] = []
-        data_should_lookup.append(fparms.from_path(path_1)) 
+        data_should_lookup.append(from_path(path_1)) 
 
         sql_execute_permanent = "SELECT * FROM permanent"
         sql_execute_lookup = "SELECT * FROM lookup"
 
-        data_get_permanent = [fparms.from_row(d) for d in PydupeDB(
+        data_get_permanent = [from_row(d) for d in PydupeDB(
             dbname).execute(sql_execute_permanent).fetchall()]
-        data_get_lookup = [fparms.from_row(d) for d in PydupeDB(
+        data_get_lookup = [from_row(d) for d in PydupeDB(
             dbname).execute(sql_execute_lookup).fetchall()]
 
         assert data_get_lookup.sort() == data_should_lookup.sort()

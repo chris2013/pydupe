@@ -12,7 +12,7 @@ from pydupe.config import cnf
 from pydupe.console import console
 from pydupe.db import PydupeDB
 from pydupe.utils import mytimer
-from pydupe.data import fparms
+from pydupe.data import fparms, from_path
 
 FORMAT = "%(message)s"
 logging.basicConfig(level=cnf['LOGLEVEL'] , format=FORMAT, datefmt="[%X]", handlers=[
@@ -101,7 +101,7 @@ class Hasher:
                             pass                                    # do not recurse hidden dirs and hidden files
                         else:
                             i += 1
-                            list_of_fparms.append(fparms.from_path(item))
+                            list_of_fparms.append(from_path(item))
                 db.parms_insert(list_of_fparms)
             db.commit()
 
