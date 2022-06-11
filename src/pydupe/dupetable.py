@@ -122,7 +122,7 @@ def check_and_autoselect(*, deltable: LuTable[str, pl.Path], keeptable: LuTable[
     file that should be deleted.
     """
 
-    prog = re.compile(autoselect_pattern)
+    autoselect_pattern_compiled = re.compile(autoselect_pattern)
     old_deltable: LuTable[str, pl.Path] = copy.deepcopy(deltable)
 
     for hsh in sorted(old_deltable.keys()):
@@ -134,7 +134,7 @@ def check_and_autoselect(*, deltable: LuTable[str, pl.Path], keeptable: LuTable[
             values = sorted(old_deltable[hsh])
             for f in values:
                 fname = f.name
-                if prog.search(fname):
+                if autoselect_pattern_compiled.search(fname):
                     keeptable.discard((hsh, f))
                     assert len(keeptable[hsh]) > 0
                     deltable.add((hsh, f))
@@ -163,34 +163,34 @@ def dd3(dupes: LuTable[str, pl.Path], *, deldir: str, pattern: str, match_deleti
     """
     # deldir ist the Directory to investigate
 
-    # dir_hashlu and outside_hashlu separate dupes in deldir from dupes outside deldir
-    dir_hashlu: LuTable[str, pl.Path] = LuTable()
-    outside_hashlu: LuTable[str, pl.Path] = LuTable()
+    # in_deldir_hashlu and outside_deldir_hashlu separate dupes in deldir from dupes outside deldir
+    in_deldir_hashlu: LuTable[str, pl.Path] = LuTable()
+    outside_deldir_hashlu: LuTable[str, pl.Path] = LuTable()
     t: mytimer = mytimer()
 
     for hsh, f in dupes:
-        # if pl.Path(f).is_relative_to(deldir): needs Python 3.9 ...
-        if is_relative_to(parent=pl.Path(deldir), testfile=f):
-            dir_hashlu.add((hsh, f))
+        if pl.Path(f).is_relative_to(deldir):
+            #if is_relative_to(parent=pl.Path(deldir), testfile=f):
+            in_deldir_hashlu.add((hsh, f))
         else:
-            outside_hashlu.add((hsh, f))
+            outside_deldir_hashlu.add((hsh, f))
     log.debug("done: partition according to "+str(deldir)+" "+t.get)
 
-    # delete from outside_hashlu dupes that are not also in dir_hashlu
-    delitems = set(outside_hashlu.keys())-set(dir_hashlu.keys())
-    outside_hashlu.ldel(delitems)
+    # delete from outside_deldir_hashlu dupes that are not also in in_deldir_hashlu
+    delitems = set(outside_deldir_hashlu.keys())-set(in_deldir_hashlu.keys())
+    outside_deldir_hashlu.ldel(delitems)
 
-    # match_hashlu and no_match_hashlu contain matches/no-matches to pattern for files within deldir
-    match_hashlu: LuTable[str, pl.Path] = LuTable()
-    no_match_hashlu: LuTable[str, pl.Path] = LuTable()
+    # match_pattern_hashlu and no_match_pattern_hashlu contain matches/no-matches to pattern for files within deldir
+    match_pattern_hashlu: LuTable[str, pl.Path] = LuTable()
+    no_match_pattern_hashlu: LuTable[str, pl.Path] = LuTable()
 
-    prog = re.compile(pattern)
+    pattern_compiled = re.compile(pattern)
 
-    for hash, f in dir_hashlu:
-        if prog.search(f.name):
-            match_hashlu.add((hash, f))
+    for hash, f in in_deldir_hashlu:
+        if pattern_compiled.search(f.name):
+            match_pattern_hashlu.add((hash, f))
         else:
-            no_match_hashlu.add((hash, f))
+            no_match_pattern_hashlu.add((hash, f))
     log.debug("done: partition matches "+t.get)
 
     # keeptable and deltable are hash-lookups for files to keep and delete respectively
@@ -199,12 +199,12 @@ def dd3(dupes: LuTable[str, pl.Path], *, deldir: str, pattern: str, match_deleti
 
     # now sort the matches in deltable or keeptable and trat also global dupes
     if match_deletions:
-        deltable = match_hashlu
+        deltable = match_pattern_hashlu
         # keep all not yet specified to be delted.
-        keeptable |= no_match_hashlu
+        keeptable = no_match_pattern_hashlu
 
         if dupes_global:
-            keeptable |= outside_hashlu
+            keeptable |= outside_deldir_hashlu
         else:
             # need to delete hashes with just one dupe in deltable and no dupe in keeptable.
             # This is because if dupes_local, single dupes (from the global level) should be
@@ -216,21 +216,22 @@ def dd3(dupes: LuTable[str, pl.Path], *, deldir: str, pattern: str, match_deleti
                 if len(deltable[key]) == 1:
                     del deltable[key]
 
-        if autoselect:
-            autoselect_pattern = "."  # matches anything
-        else:
-            autoselect_pattern = "a^"  # matches nothing
-
-        deltable, keeptable = check_and_autoselect(
-            deltable=deltable, keeptable=keeptable, autoselect_pattern=autoselect_pattern)
-
     else:
-        keeptable = match_hashlu
+        keeptable = match_pattern_hashlu
         # delete all not yet specified to be kept
-        deltable |= no_match_hashlu
+        deltable = no_match_pattern_hashlu
 
         if dupes_global:
-            deltable |= outside_hashlu
+            deltable |= outside_deldir_hashlu
+
+    if autoselect:
+        autoselect_pattern = "."  # matches anything
+    else:
+        autoselect_pattern = "a^"  # matches nothing
+
+    deltable, keeptable = check_and_autoselect(
+        deltable=deltable, keeptable=keeptable, autoselect_pattern=autoselect_pattern)
+
     log.debug("done: separated into deltable and keeptable "+t.get)
     return deltable, keeptable
 

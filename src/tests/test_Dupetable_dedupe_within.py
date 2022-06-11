@@ -87,7 +87,10 @@ class TestDedupeWithin:
         assert keeptable.as_dict_of_sets() == {
             'be1c1a22b4055523a0d736f4174ef1d6be1c1a22b4055523a0d736f4174ef1d6':
             {'/tests/tdata/somedir/file_is_dupe',
-            '/tests/tdata/somedir/somedir2/file_is_dupe2'}
+            '/tests/tdata/somedir/somedir2/file_is_dupe2'},
+            '3aa2ed13ee40ba651e87a0fd60b753d03aa2ed13ee40ba651e87a0fd60b753d0':
+            {'/tests/tdata/somedir/dupe2_in_dir',
+            '/tests/tdata/somedir/dupe_in_dir'}
         }
     
     
