@@ -4,6 +4,8 @@ import tempfile
 
 import pydupe.dupetable as dupetable
 import pytest
+import pydupe.command as command
+
 from pydupe.db import PydupeDB
 from pydupe.hasher import Hasher
 
@@ -37,7 +39,7 @@ class Test_check:
 
             hsh = Hasher(dbname)
             file_is_dupe.unlink()
-            hsh.clean() # here file_is_dupe should be deleted from db
+            command.clean(hsh) # here file_is_dupe should be deleted from db
 
             with PydupeDB(dbname) as db:
                 flist = db.get_list_of_files_in_dir(str(cwd))

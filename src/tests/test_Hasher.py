@@ -7,6 +7,7 @@ from pydupe.config import cnf
 from pydupe.db import PydupeDB
 from pydupe.hasher import Hasher, hash_file
 from pydupe.data import fparms, from_path, from_row
+import pydupe.command as command
 
 @pytest.fixture(scope='function')
 def setup_tmp_path() -> tp.Generator[tp.Any, tp.Any, tp.Any]:
@@ -49,7 +50,7 @@ class TestHasher:
         dbname = pl.Path(tmpdirname + "/.test_Hasher.sqlite")
         path = pl.Path(tmpdirname + "/somedir")
         hsh = Hasher(dbname)
-        hsh.clean()
+        command.clean(hsh)
         hsh.scan_files_on_disk_and_insert_stats_in_db(path)
         data_should: tp.List[tp.Optional[fparms]] = []
         for item in path.rglob("*"):
@@ -66,7 +67,7 @@ class TestHasher:
         path_2 = pl.Path(tmpdirname + "/somedir/somedir2")
         path_1 = pl.Path(tmpdirname + "/somedir/somefile.txt")
         hsh = Hasher(dbname)
-        hsh.clean()
+        command.clean(hsh)
         hsh.scan_files_on_disk_and_insert_stats_in_db(path)
         hsh.move_dbcontent_for_dir_to_permanent(path_2)
 
