@@ -97,8 +97,12 @@ class TestLuTable:
         a = LuTable([('1',self.two),('3',self.four), ('3',self.five),('4',self.six),('4',self.seven),('5',self.eight)])
         a.ldel(['3','4'])
         assert a == LuTable([('1',self.two), ('5',self.eight)])
-        a.ldel(['1'])
+        a.ldel('1')
         assert a == LuTable(('5',self.eight))
+        with pytest.raises(TypeError):
+            a.ldel[['5', 'nothere']] #type: ignore
+        with pytest.raises(TypeError):
+            a.ldel['nothere'] #type: ignore
 
     def test_keys(self) -> None:
         a = LuTable([('1',self.two),('3',self.four),('3',self.five),('3',self.six)])
@@ -131,7 +135,8 @@ class TestLuTable:
 
     def test_delitem(self) -> None:
         a = LuTable([(1,2),(3,4)])
-        a[7] = [8]
+        a[7] = [8, 9]
+        assert a == LuTable([(1,2), (3,4), (7,8), (7,9)])
         del a[7]
         assert a == LuTable([(1,2), (3,4)])
 

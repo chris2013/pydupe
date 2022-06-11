@@ -130,8 +130,7 @@ class LuTable(tp.Generic[K, V]):
     def ldel(self, iterable: tp.Optional[tp.Iterable[K]] = None) -> None:
         if iterable is not None:
             for k in iterable:
-                if k in self._hashlu:
-                    del self._hashlu[k]
+                del self[k]
 
     def keys(self) -> tp.KeysView[K]:
         return self._hashlu.keys()
