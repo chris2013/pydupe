@@ -36,6 +36,106 @@ def hash_file(file: str) -> str:
 
     return hsh
 
+def move_dbcontent_for_dir_to_permanent(dbname: pathlib.Path, path: pathlib.Path) -> None:
+    with PydupeDB(dbname) as db:
+        db.copy_dir_to_table_permanent(path)
+        db.delete_dir(path)
+        db.commit()
+
+def scan_files_on_disk_and_insert_stats_in_db(dbname: pathlib.Path, path: pathlib.Path) -> int:
+    assert isinstance(path, pathlib.Path)
+    i = 0
+
+    with PydupeDB(dbname) as db:
+        with Progress(console=console) as progress:
+            task = progress.add_task(
+                "[green] get file statistics ...", start=False)
+            filelist = list(path.rglob("*"))
+            progress.update(task, total=len(filelist))
+            list_of_fparms: list[fparms] = []
+            for item in filelist:
+                progress.update(task, advance=1)
+                if item.is_file() and not item.is_symlink():    # only files and no symlink make it into database
+                    if "/." in (item_str := str(item)):
+                        pass                                    # do not recurse hidden dirs and hidden files
+                    else:
+                        i += 1
+                        list_of_fparms.append(from_path(item))
+            db.parms_insert(list_of_fparms)
+        db.commit()
+
+    return i
+
+def copy_hash_from_permanent_if_unchanged_inode_size_mtime_ctime(dbname: pathlib.Path) -> None:
+    with PydupeDB(dbname) as db:
+        db.copy_hash_to_table_lookup()
+        db.commit()
+        # db.clear_permanent()
+        # db.commit()
+
+def get_dupes_where_hash_is_NULL(dbname: pathlib.Path) -> tp.List[str]:
+    with PydupeDB(dbname) as db:
+        list_of_files_to_update: tp.List[str] = db.get_list_of_equal_sized_files_where_hash_is_NULL()
+
+    return list_of_files_to_update
+
+def rehash_dupes_where_hash_is_NULL(dbname: pathlib.Path, list_of_files_to_update: tp.Optional[tp.List[str]]=None) -> int:
+
+    if not list_of_files_to_update:
+        list_of_files_to_update = get_dupes_where_hash_is_NULL(dbname)
+
+    filelist_chunked = list(chunked(list_of_files_to_update, 1000))
+
+    with Progress(console=console, auto_refresh=False) as progress:
+        if count := len(filelist_chunked):
+            task_commit = progress.add_task(
+                "[green] hashing and committing to sqlite ...", total=count)
+
+        for chunk in filelist_chunked:
+
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                to_do_map = {}
+                for file in chunk:
+                    future = executor.submit(hash_file, file)
+                    to_do_map[future] = file
+                done_iter = concurrent.futures.as_completed(to_do_map)
+
+            with PydupeDB(dbname) as db:
+                hashlist: list[tuple[tp.Optional[str], str]] = []
+                for future in done_iter:
+                    file = to_do_map[future]
+                    try:
+                        hash = future.result()
+                    except Exception as exc:
+                        raise OSError("exception processing file {file}")
+
+                    hashlist.append((hash, file))
+                db.update_hash(hashlist)
+                db.commit()
+
+                progress.update(task_commit, advance=1)
+                progress.refresh()
+
+    return len(list_of_files_to_update)
+
+def hashdir(dbname: pathlib.Path, path: pathlib.Path) -> tp.Tuple[int, int]:
+    t = mytimer()
+    log.debug("started: move dbcontent for dir to permanent")
+    move_dbcontent_for_dir_to_permanent(dbname, path)
+    log.debug("done: move dbcontent for dir to permanent "+t.get)
+    log.debug("started: scan files on disk and insert stats in db") 
+    number_scanned = scan_files_on_disk_and_insert_stats_in_db(dbname, path)
+    log.debug("done: scan files on disk and insert stats in db "+t.get)
+    log.debug("start: copy hash from permanent if unchanged stats")
+    copy_hash_from_permanent_if_unchanged_inode_size_mtime_ctime(dbname)
+    log.debug("done: copy hash from permanent if unchanged stats "+t.get)
+    log.debug("started: rehash_dupes_where_hash_is_NULL")
+    number_hashed = rehash_dupes_where_hash_is_NULL(dbname)
+    log.debug("done: rehash_dupes_where_hash_is_NULL "+t.get)
+    
+    return number_scanned, number_hashed
+
+
 
 class Hasher:
     """
@@ -47,101 +147,3 @@ class Hasher:
     def __init__(self, dbname: pathlib.Path = pathlib.Path.home() / ".pydupe.sqlite"):
         self._dbname = dbname
 
-    def hashdir(self, path: pathlib.Path) -> tp.Tuple[int, int]:
-        t = mytimer()
-        log.debug("started: move dbcontent for dir to permanent")
-        self.move_dbcontent_for_dir_to_permanent(path)
-        log.debug("done: move dbcontent for dir to permanent "+t.get)
-        log.debug("started: scan files on disk and insert stats in db") 
-        number_scanned = self.scan_files_on_disk_and_insert_stats_in_db(path)
-        log.debug("done: scan files on disk and insert stats in db "+t.get)
-        log.debug("start: copy hash from permanent if unchanged stats")
-        self.copy_hash_from_permanent_if_unchanged_inode_size_mtime_ctime()
-        log.debug("done: copy hash from permanent if unchanged stats "+t.get)
-        log.debug("started: rehash_dupes_where_hash_is_NULL")
-        number_hashed = self.rehash_dupes_where_hash_is_NULL()
-        log.debug("done: rehash_dupes_where_hash_is_NULL "+t.get)
-        
-        return number_scanned, number_hashed
-
-    def move_dbcontent_for_dir_to_permanent(self, path: pathlib.Path) -> None:
-        with PydupeDB(self._dbname) as db:
-            db.copy_dir_to_table_permanent(path)
-            db.delete_dir(path)
-            db.commit()
-
-    def scan_files_on_disk_and_insert_stats_in_db(self, path: pathlib.Path) -> int:
-        assert isinstance(path, pathlib.Path)
-        i = 0
-
-        with PydupeDB(self._dbname) as db:
-            with Progress(console=console) as progress:
-                task = progress.add_task(
-                    "[green] get file statistics ...", start=False)
-                filelist = list(path.rglob("*"))
-                progress.update(task, total=len(filelist))
-                list_of_fparms: list[fparms] = []
-                for item in filelist:
-                    progress.update(task, advance=1)
-                    if item.is_file() and not item.is_symlink():    # only files and no symlink make it into database
-                        if "/." in (item_str := str(item)):
-                            pass                                    # do not recurse hidden dirs and hidden files
-                        else:
-                            i += 1
-                            list_of_fparms.append(from_path(item))
-                db.parms_insert(list_of_fparms)
-            db.commit()
-
-        return i
-
-    def copy_hash_from_permanent_if_unchanged_inode_size_mtime_ctime(self) -> None:
-        with PydupeDB(self._dbname) as db:
-            db.copy_hash_to_table_lookup()
-            db.commit()
-            # db.clear_permanent()
-            # db.commit()
-
-    def get_dupes_where_hash_is_NULL(self) -> tp.List[str]:
-        with PydupeDB(self._dbname) as db:
-            list_of_files_to_update: tp.List[str] = db.get_list_of_equal_sized_files_where_hash_is_NULL()
-
-        return list_of_files_to_update
-
-    def rehash_dupes_where_hash_is_NULL(self, list_of_files_to_update: tp.Optional[tp.List[str]]=None) -> int:
-
-        if not list_of_files_to_update:
-            list_of_files_to_update = self.get_dupes_where_hash_is_NULL()
-
-        filelist_chunked = list(chunked(list_of_files_to_update, 1000))
-
-        with Progress(console=console, auto_refresh=False) as progress:
-            if count := len(filelist_chunked):
-                task_commit = progress.add_task(
-                    "[green] hashing and committing to sqlite ...", total=count)
-
-            for chunk in filelist_chunked:
-
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    to_do_map = {}
-                    for file in chunk:
-                        future = executor.submit(hash_file, file)
-                        to_do_map[future] = file
-                    done_iter = concurrent.futures.as_completed(to_do_map)
-
-                with PydupeDB(self._dbname) as db:
-                    hashlist: list[tuple[tp.Optional[str], str]] = []
-                    for future in done_iter:
-                        file = to_do_map[future]
-                        try:
-                            hash = future.result()
-                        except Exception as exc:
-                            raise OSError("exception processing file {file}")
-
-                        hashlist.append((hash, file))
-                    db.update_hash(hashlist)
-                    db.commit()
-
-                    progress.update(task_commit, advance=1)
-                    progress.refresh()
-
-        return len(list_of_files_to_update)

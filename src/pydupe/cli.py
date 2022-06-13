@@ -5,12 +5,11 @@ from datetime import datetime
 
 import rich_click as click
 
-import pydupe.dupetable as dupetable
 import pydupe.command as command
-
-from pydupe.console import console 
+import pydupe.dupetable as dupetable
+import pydupe.hasher
+from pydupe.console import console
 from pydupe.db import PydupeDB
-from pydupe.hasher import Hasher
 from pydupe.utils import mytimer
 
 
@@ -88,9 +87,8 @@ def hash(ctx: click.Context, path: str) -> None:
     path_pl: pathlib.Path = pathlib.Path(path).resolve()
     t = mytimer() 
     dbname: pathlib.Path = ctx.obj['dbname']
-    hsh = Hasher(dbname)
-    command.clean(hsh)
-    number_scanned, number_hashed = hsh.hashdir(path_pl)
+    command.clean(dbname)
+    number_scanned, number_hashed = pydupe.hasher.hashdir(dbname, path_pl)
     console.print(
         f"[green] scanned {number_scanned} and hashed thereof {number_hashed} files in {t.get} sec")
 

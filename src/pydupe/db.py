@@ -1,5 +1,4 @@
 import pathlib
-import re
 import sqlite3
 import typing as tp
 import types as ty

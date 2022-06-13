@@ -5,10 +5,9 @@ import typing as tp
 import pytest
 from pydupe.config import cnf
 from pydupe.db import PydupeDB
-from pydupe.hasher import Hasher, hash_file
 from pydupe.data import fparms, from_path, from_row
 import pydupe.command as command
-
+import pydupe.hasher 
 @pytest.fixture(scope='function')
 def setup_tmp_path() -> tp.Generator[tp.Any, tp.Any, tp.Any]:
     """ Fixture to set up PydupeDB in tmporary Directory"""
@@ -49,9 +48,8 @@ class TestHasher:
         tmpdirname = setup_tmp_path
         dbname = pl.Path(tmpdirname + "/.test_Hasher.sqlite")
         path = pl.Path(tmpdirname + "/somedir")
-        hsh = Hasher(dbname)
-        command.clean(hsh)
-        hsh.scan_files_on_disk_and_insert_stats_in_db(path)
+        command.clean(dbname)
+        pydupe.hasher.scan_files_on_disk_and_insert_stats_in_db(dbname, path)
         data_should: tp.List[tp.Optional[fparms]] = []
         for item in path.rglob("*"):
             data_should.append(from_path(item))
@@ -66,10 +64,9 @@ class TestHasher:
         path = pl.Path(tmpdirname + "/somedir")
         path_2 = pl.Path(tmpdirname + "/somedir/somedir2")
         path_1 = pl.Path(tmpdirname + "/somedir/somefile.txt")
-        hsh = Hasher(dbname)
-        command.clean(hsh)
-        hsh.scan_files_on_disk_and_insert_stats_in_db(path)
-        hsh.move_dbcontent_for_dir_to_permanent(path_2)
+        command.clean(dbname)
+        pydupe.hasher.scan_files_on_disk_and_insert_stats_in_db(dbname, path)
+        pydupe.hasher.move_dbcontent_for_dir_to_permanent(dbname, path_2)
 
         data_should_permanent: tp.List[tp.Optional[fparms]] = []
         for item in path_2.rglob("*"):
@@ -93,9 +90,8 @@ class TestHasher:
         tmpdirname = setup_tmp_path
         dbname = pl.Path(tmpdirname + "/.test_Hasher.sqlite")
         path = pl.Path(tmpdirname + "/somedir/somedir2")
-        hsh = Hasher(dbname)
-        hsh.clean()
-        hsh.scan_files_on_disk_and_insert_stats_in_db(path)
+        command.clean(dbname)
+        pydupe.hasher.scan_files_on_disk_and_insert_stats_in_db(dbname, path)
 
         somefile1 = path / 'file1'
         somefile2 = path / 'file2'
@@ -105,7 +101,7 @@ class TestHasher:
         somefile6 = path / 'file6'
         filelist = [somefile1, somefile2, somefile3,
                     somefile4, somefile5, somefile6]
-        hashlist = [hash_file(str(f)) for f in filelist]
+        hashlist = [pydupe.hasher.hash_file(str(f)) for f in filelist]
 
         with PydupeDB(dbname) as db:
             for file, hash in zip(filelist, hashlist):
@@ -120,7 +116,7 @@ class TestHasher:
                 db.update_hash([(None, str(file))])
             db.commit()
 
-        hsh.rehash_dupes_where_hash_is_NULL()
+        pydupe.hasher.rehash_dupes_where_hash_is_NULL(dbname)
 
         with PydupeDB(dbname) as db:
             data_after = [dict(d) for d in db.get().fetchall()]

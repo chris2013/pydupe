@@ -7,7 +7,7 @@ import pytest
 import pydupe.command as command
 
 from pydupe.db import PydupeDB
-from pydupe.hasher import Hasher
+import pydupe.hasher
 
 cwd = str(pathlib.Path.cwd())
 tdata = cwd + "/pydupe/pydupe/"
@@ -31,15 +31,13 @@ class Test_check:
             file_is_dupe.write_text("some dummy text")
             dupe_in_dir.write_text("some dummy text")
 
-            hsh = Hasher(dbname)
-            hsh.hashdir(cwd)
+            pydupe.hasher.hashdir(dbname, cwd)
             with PydupeDB(dbname) as db:
                 db.update_hash([(None, str(file_is_dupe))])
                 db.commit()
 
-            hsh = Hasher(dbname)
             file_is_dupe.unlink()
-            command.clean(hsh) # here file_is_dupe should be deleted from db
+            command.clean(dbname) # here file_is_dupe should be deleted from db
 
             with PydupeDB(dbname) as db:
                 flist = db.get_list_of_files_in_dir(str(cwd))
