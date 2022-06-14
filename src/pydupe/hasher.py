@@ -135,15 +135,15 @@ def hashdir(dbname: pathlib.Path, path: pathlib.Path) -> tp.Tuple[int, int]:
     
     return number_scanned, number_hashed
 
+def clean(dbname: pathlib.Path) -> None:
+    if list_of_files_to_update := get_dupes_where_hash_is_NULL(dbname):
 
+        files_not_on_disk = [pathlib.Path(x) for x in list_of_files_to_update if not pathlib.Path(x).is_file()]
+        if files_not_on_disk:
+            with PydupeDB(dbname) as db:
+                for file in files_not_on_disk:
+                    db.delete_file(file)
+                db.commit()
 
-class Hasher:
-    """
-    This class bundles all functionalities to hash files on disk and insert
-    the hashes in the sqlite Database. I have come back to defining a class rather than
-    having this functionality on module level. The class is invoked with the sqlitedatabase as pathlib.Path object.
-    """
-
-    def __init__(self, dbname: pathlib.Path = pathlib.Path.home() / ".pydupe.sqlite"):
-        self._dbname = dbname
-
+        rehash_dupes_where_hash_is_NULL(dbname,
+            list_of_files_to_update=list_of_files_to_update)
