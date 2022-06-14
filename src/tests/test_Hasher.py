@@ -66,7 +66,7 @@ class TestHasher:
         path_1 = pl.Path(tmpdirname + "/somedir/somefile.txt")
         pydupe.hasher.clean(dbname)
         pydupe.hasher.scan_files_on_disk_and_insert_stats_in_db(dbname, path)
-        pydupe.hasher.move_dbcontent_for_dir_to_permanent(dbname, path_2)
+        PydupeDB(dbname).move_dbcontent_for_dir_to_permanent(path_2)
 
         data_should_permanent: tp.List[tp.Optional[fparms]] = []
         for item in path_2.rglob("*"):

@@ -36,12 +36,6 @@ def hash_file(file: str) -> str:
 
     return hsh
 
-def move_dbcontent_for_dir_to_permanent(dbname: pathlib.Path, path: pathlib.Path) -> None:
-    with PydupeDB(dbname) as db:
-        db.copy_dir_to_table_permanent(path)
-        db.delete_dir(path)
-        db.commit()
-
 def scan_files_on_disk_and_insert_stats_in_db(dbname: pathlib.Path, path: pathlib.Path) -> int:
     assert isinstance(path, pathlib.Path)
     i = 0
@@ -66,23 +60,10 @@ def scan_files_on_disk_and_insert_stats_in_db(dbname: pathlib.Path, path: pathli
 
     return i
 
-def copy_hash_from_permanent_if_unchanged_inode_size_mtime_ctime(dbname: pathlib.Path) -> None:
-    with PydupeDB(dbname) as db:
-        db.copy_hash_to_table_lookup()
-        db.commit()
-        # db.clear_permanent()
-        # db.commit()
-
-def get_dupes_where_hash_is_NULL(dbname: pathlib.Path) -> tp.List[str]:
-    with PydupeDB(dbname) as db:
-        list_of_files_to_update: tp.List[str] = db.get_list_of_equal_sized_files_where_hash_is_NULL()
-
-    return list_of_files_to_update
-
 def rehash_dupes_where_hash_is_NULL(dbname: pathlib.Path, list_of_files_to_update: tp.Optional[tp.List[str]]=None) -> int:
 
     if not list_of_files_to_update:
-        list_of_files_to_update = get_dupes_where_hash_is_NULL(dbname)
+        list_of_files_to_update = PydupeDB(dbname).get_dupes_where_hash_is_NULL()
 
     filelist_chunked = list(chunked(list_of_files_to_update, 1000))
 
@@ -121,13 +102,13 @@ def rehash_dupes_where_hash_is_NULL(dbname: pathlib.Path, list_of_files_to_updat
 def hashdir(dbname: pathlib.Path, path: pathlib.Path) -> tp.Tuple[int, int]:
     t = mytimer()
     log.debug("started: move dbcontent for dir to permanent")
-    move_dbcontent_for_dir_to_permanent(dbname, path)
+    PydupeDB(dbname).move_dbcontent_for_dir_to_permanent(path)
     log.debug("done: move dbcontent for dir to permanent "+t.get)
     log.debug("started: scan files on disk and insert stats in db") 
     number_scanned = scan_files_on_disk_and_insert_stats_in_db(dbname, path)
     log.debug("done: scan files on disk and insert stats in db "+t.get)
     log.debug("start: copy hash from permanent if unchanged stats")
-    copy_hash_from_permanent_if_unchanged_inode_size_mtime_ctime(dbname)
+    PydupeDB(dbname).copy_hash_from_permanent_if_unchanged_inode_size_mtime_ctime()
     log.debug("done: copy hash from permanent if unchanged stats "+t.get)
     log.debug("started: rehash_dupes_where_hash_is_NULL")
     number_hashed = rehash_dupes_where_hash_is_NULL(dbname)
@@ -136,7 +117,7 @@ def hashdir(dbname: pathlib.Path, path: pathlib.Path) -> tp.Tuple[int, int]:
     return number_scanned, number_hashed
 
 def clean(dbname: pathlib.Path) -> None:
-    if list_of_files_to_update := get_dupes_where_hash_is_NULL(dbname):
+    if list_of_files_to_update := PydupeDB(dbname).get_dupes_where_hash_is_NULL():
 
         files_not_on_disk = [pathlib.Path(x) for x in list_of_files_to_update if not pathlib.Path(x).is_file()]
         if files_not_on_disk:
