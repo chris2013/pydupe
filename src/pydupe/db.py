@@ -50,41 +50,39 @@ class PydupeDB(object):
         self.connection.close()
         return ext_type is None
 
-    def parms_insert(self,item: list[fparms]) -> None:
+    def parms_insert(self,item: list[fparms]) -> sqlite3.Cursor:
         list_of_tupls=[(fparm.filename, fparm.hash, fparm.size, fparm.inode, fparm.mtime, fparm.ctime) for fparm in item]
         insert_sql = "INSERT INTO lookup (filename, hash, size, inode, mtime, ctime) VALUES (?,?,?,?,?,?)"
-        self.cur.executemany(insert_sql, list_of_tupls) 
+        return self.cur.executemany(insert_sql, list_of_tupls) 
 
-    def update_hash(self, list_of_tupl: list[tuple[tp.Optional[str],str]])-> None:
+    def update_hash(self, list_of_tupl: list[tuple[tp.Optional[str],str]])-> sqlite3.Cursor:
         update_sql = "UPDATE lookup SET hash = ? where filename = ?"
-        self.cur.executemany(update_sql, list_of_tupl)
+        return self.cur.executemany(update_sql, list_of_tupl)
 
     def get_list_of_equal_sized_files_where_hash_is_NULL(self) -> tp.List[str]:
         # select files with same size with no hash yet
         get_sql = "SELECT l.filename FROM lookup l JOIN (SELECT size, count(*) c FROM lookup GROUP BY size HAVING c > 1) s on l.size = s.size where l.hash is NULL"
-        data_get = self.cur.execute(get_sql)
-        return [d['filename'] for d in data_get]
+        return [row['filename'] for row in self.cur.execute(get_sql)]
 
     def get_dupes(self) -> sqlite3.Cursor:
         get_sql = "SELECT l.filename, l.hash FROM lookup l JOIN (SELECT hash, count(*) c FROM lookup GROUP BY hash HAVING c > 1) h on l.hash = h.hash order by l.hash"
-        self.cur.execute(get_sql)
-        return self.cur
+        return self.cur.execute(get_sql)
 
-    def delete_dir(self, dirname: pathlib.Path) -> None:
+    def delete_dir(self, dirname: pathlib.Path) -> sqlite3.Cursor:
         dirname_str: str = str(dirname)
         delete_sql = "DELETE FROM lookup WHERE filename LIKE ?"
-        self.cur.execute(delete_sql, (dirname_str + '%',))
+        return self.cur.execute(delete_sql, (dirname_str + '%',))
 
-    def delete_file(self, filename: pathlib.Path) -> None:
+    def delete_file(self, filename: pathlib.Path) -> sqlite3.Cursor:
         delete_sql = "DELETE from lookup where filename like ?"
-        self.cur.execute(delete_sql, (str(filename),))
+        return self.cur.execute(delete_sql, (str(filename),))
 
-    def copy_dir_to_table_permanent(self, dirname: pathlib.Path) -> None:
+    def copy_dir_to_table_permanent(self, dirname: pathlib.Path) -> sqlite3.Cursor:
         dirname_str: str = str(dirname)
         copy_sql = "REPLACE INTO permanent select * FROM lookup WHERE filename LIKE ?"
-        self.cur.execute(copy_sql, (dirname_str + '%',))
+        return self.cur.execute(copy_sql, (dirname_str + '%',))
 
-    def copy_hash_to_table_lookup(self, *, check_filename: bool=True) -> None:
+    def copy_hash_to_table_lookup(self, *, check_filename: bool=True) -> sqlite3.Cursor:
         if check_filename:
             updateLookup_sql = """
             UPDATE lookup
@@ -108,7 +106,7 @@ class PydupeDB(object):
                 permanent.ctime = lookup.ctime AND
                 permanent.mtime = lookup.mtime
             """
-        self.cur.execute(updateLookup_sql)
+        return self.cur.execute(updateLookup_sql)
 
     def execute(self, sql: str) -> sqlite3.Cursor:
         return self.cur.execute(sql)
@@ -135,13 +133,12 @@ class PydupeDB(object):
     def get_list_of_files_in_dir(self, dirname: str) -> tp.List[str]:
         get_sql = "SELECT filename FROM lookup WHERE filename LIKE ?"
         data_get = self.cur.execute(get_sql, (dirname + '%',))
-        return [d['filename'] for d in data_get]
+        return [row['filename'] for row in data_get]
 
     # for testing only
     def get_file_hash(self) -> sqlite3.Cursor:
         get_sql = "SELECT filename, hash from lookup"
-        self.cur.execute(get_sql)
-        return self.cur
+        return self.cur.execute(get_sql)
 
     def move_dbcontent_for_dir_to_permanent(self, path: pathlib.Path) -> None:
         self.copy_dir_to_table_permanent(path)
@@ -151,9 +148,5 @@ class PydupeDB(object):
     def copy_hash_from_permanent_if_unchanged_inode_size_mtime_ctime(self) -> None:
         self.copy_hash_to_table_lookup()
         self.commit()
-
-    def get_dupes_where_hash_is_NULL(self) -> tp.List[str]:
-        list_of_files_to_update: tp.List[str] = self.get_list_of_equal_sized_files_where_hash_is_NULL()
-        return list_of_files_to_update
 
 

@@ -63,7 +63,7 @@ def scan_files_on_disk_and_insert_stats_in_db(dbname: pathlib.Path, path: pathli
 def rehash_dupes_where_hash_is_NULL(dbname: pathlib.Path, list_of_files_to_update: tp.Optional[tp.List[str]]=None) -> int:
 
     if not list_of_files_to_update:
-        list_of_files_to_update = PydupeDB(dbname).get_dupes_where_hash_is_NULL()
+        list_of_files_to_update = PydupeDB(dbname).get_list_of_equal_sized_files_where_hash_is_NULL()
 
     filelist_chunked = list(chunked(list_of_files_to_update, 1000))
 
@@ -117,7 +117,7 @@ def hashdir(dbname: pathlib.Path, path: pathlib.Path) -> tp.Tuple[int, int]:
     return number_scanned, number_hashed
 
 def clean(dbname: pathlib.Path) -> None:
-    if list_of_files_to_update := PydupeDB(dbname).get_dupes_where_hash_is_NULL():
+    if list_of_files_to_update := PydupeDB(dbname).get_list_of_equal_sized_files_where_hash_is_NULL():
 
         files_not_on_disk = [pathlib.Path(x) for x in list_of_files_to_update if not pathlib.Path(x).is_file()]
         if files_not_on_disk:
