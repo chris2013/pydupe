@@ -20,7 +20,7 @@ logging.basicConfig(level=cnf['LOGLEVEL'] , format=FORMAT, datefmt="[%X]", handl
 log = logging.getLogger(__name__)
 
 def hash_file(file: str) -> str:
-    cmd: tp.List[str] = cnf['HASHEXECUTE_1'] + [file]
+    cmd: list[str] = cnf['HASHEXECUTE_1'] + [file]
     if cnf['HASHEXECUTE_2']:
         cmd += cnf['HASHEXECUTE_2']
 
