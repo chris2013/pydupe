@@ -9,7 +9,7 @@ from rich.logging import RichHandler
 from rich.progress import Progress
 
 from pydupe.config import cnf
-from pydupe.console import console
+from pydupe.console import console, spinner
 from pydupe.db import PydupeDB
 from pydupe.utils import mytimer
 from pydupe.data import fparms, from_path
@@ -36,26 +36,27 @@ def hash_file(file: str) -> str:
 
     return hsh
 
+@spinner(console, 'get file statistics')
 def scan_files_on_disk_and_insert_stats_in_db(dbname: pathlib.Path, path: pathlib.Path) -> int:
     assert isinstance(path, pathlib.Path)
     i = 0
 
     with PydupeDB(dbname) as db:
-        with Progress(console=console) as progress:
-            task = progress.add_task(
-                "[green] get file statistics ...", start=False)
-            filelist = list(path.rglob("*"))
-            progress.update(task, total=len(filelist))
-            list_of_fparms: list[fparms] = []
-            for item in filelist:
-                progress.update(task, advance=1)
-                if item.is_file() and not item.is_symlink():    # only files and no symlink make it into database
-                    if "/." in (item_str := str(item)):
-                        pass                                    # do not recurse hidden dirs and hidden files
-                    else:
-                        i += 1
-                        list_of_fparms.append(from_path(item))
-            db.parms_insert(list_of_fparms)
+#        with Progress(console=console) as progress:
+#            task = progress.add_task(
+#               "[green] get file statistics ...", start=False)
+        filelist = list(path.rglob("*"))
+#            progress.update(task, total=len(filelist))
+        list_of_fparms: list[fparms] = []
+        for item in filelist:
+#                progress.update(task, advance=1)
+            if item.is_file() and not item.is_symlink():    # only files and no symlink make it into database
+                if "/." in (item_str := str(item)):
+                    pass                                    # do not recurse hidden dirs and hidden files
+                else:
+                    i += 1
+                    list_of_fparms.append(from_path(item))
+        db.parms_insert(list_of_fparms)
         db.commit()
 
     return i

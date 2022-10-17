@@ -1,3 +1,4 @@
+from time import sleep
 from rich.console import Console
 import functools
 
@@ -14,3 +15,10 @@ def spinner(console, msg, spinner="dots"):
         return wrapper_decorator
 
     return decorator_spinner
+
+if __name__ == '__main__':
+    @spinner(console, "hallo!")
+    def wait(x):
+        sleep(x)
+
+    wait(10)
