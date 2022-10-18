@@ -75,8 +75,7 @@ def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global
     dupestree, dels, keeps = Dt.get_tree()
 
     console.record = True
-    console.print("[red]deletions: "+str(dels) +
-                  " [green]keeps: "+str(keeps))
+    console.print(f"[red]deletions: {dels} [green]keeps: {keeps}")
     console.print(dupestree)
     if outfile:
         console.save_html(outfile)
@@ -84,7 +83,6 @@ def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global
 
     if do_move:
         Dt.delete(trash)
-
 
 @cli.command()
 @click.argument('path', required=True, type=click.Path(exists=True))
