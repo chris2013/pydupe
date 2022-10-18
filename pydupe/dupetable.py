@@ -269,25 +269,20 @@ class Dupetable(Dupes):
     These tables can be extracted by method get_deltable and get_keeptable. Automatic postprocessing can be enabled by the flag dedupe."""
 
     def __init__(self, *, deldir: str, pattern: str, match_deletions: bool = True, dupes_global: bool = False, autoselect: bool = False, dbname: pl.Path = pl.Path.home() / ".pydupe.sqlite", dedupe: bool = False) -> None:
-        with Progress(console=console) as progress:
-            task_dedupe = progress.add_task("[green]deduping...", start=False)
+        super().__init__(dbname=dbname)
+        self._deduped: bool = False
+        self._dbname: pl.Path = dbname
+        self._deldir: str = deldir
+        self._pattern: str = pattern
+        self._match_deletions: bool = match_deletions
+        self._dupes_global: bool = dupes_global
+        self._autoselect: bool = autoselect
+        self._keeptable: LuTable[str, pl.Path] = LuTable()
+        self._deltable: LuTable[str, pl.Path] = LuTable()
 
-            super().__init__(dbname=dbname)
-            self._deduped: bool = False
-            self._dbname: pl.Path = dbname
-            self._deldir: str = deldir
-            self._pattern: str = pattern
-            self._match_deletions: bool = match_deletions
-            self._dupes_global: bool = dupes_global
-            self._autoselect: bool = autoselect
-            self._keeptable: LuTable[str, pl.Path] = LuTable()
-            self._deltable: LuTable[str, pl.Path] = LuTable()
-
-            if dedupe:
-                log.debug("start deduping")
-                self.dedupe()
-
-            progress.update(task_dedupe, advance=1)
+        if dedupe:
+            log.debug("start deduping")
+            self.dedupe()
 
     def dedupe(self) -> None:
 
@@ -301,36 +296,23 @@ class Dupetable(Dupes):
     def get_keeptable(self) -> LuTable[str, pl.Path]:
         return self._keeptable
 
-    def print_tree(self, outfile: pl.Path) -> None:
-        outfile = outfile.resolve()
-        outfile_st: str = str(outfile)
-        console.record = True
+    def get_tree(self) -> tuple[Tree, int, int]:
+        """ returns (Tree, #of deletions, #of keeps) """
 
-        if len(self._keeptable) + len(self._deltable):
-            console.print("[red]deletions: "+str(len(self._deltable)) +
-                          " [green]keeps: "+str(len(self._keeptable)))
-            dupestree = Tree(
-                "[bold]Dupes Tree [not bold red] red: dupes to be deleted [green] green: dupes to keep")
+        dupestree = Tree(
+            "[bold]Dupes Tree [not bold red] red: dupes to be deleted [green] green: dupes to keep")
 
-            for hash in self._deltable.keys() | self._keeptable.keys():
-                branch = dupestree.add(hash[:10] + "...")
+        for hash in self._deltable.keys() | self._keeptable.keys():
+            branch = dupestree.add(hash[:10] + "...")
 
-                if hash in self._deltable.keys():
-                    for delfile in self._deltable[hash]:
-                        branch.add("[red]" + str(delfile))
-                if hash in self._keeptable.keys():
-                    for keepfile in self._keeptable[hash]:
-                        branch.add("[green]" + str(keepfile))
+            if hash in self._deltable.keys():
+                for delfile in self._deltable[hash]:
+                    branch.add("[red]" + str(delfile))
+            if hash in self._keeptable.keys():
+                for keepfile in self._keeptable[hash]:
+                    branch.add("[green]" + str(keepfile))
 
-            console.print(dupestree)
-
-            if outfile:
-                console.save_html(outfile_st)
-
-            console.record = False
-
-        else:
-            console.print("[red]no dupes flagged for deletion or to be kept")
+        return(dupestree, len(self._deltable), len(self._keeptable))
 
     def validate(self) -> None:
 

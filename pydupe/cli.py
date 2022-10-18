@@ -1,3 +1,4 @@
+from fcntl import F_SEAL_SEAL
 import logging
 import pathlib
 import typing
@@ -70,7 +71,16 @@ def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global
     option['autoselect'] = autoselect
     option['dedupe'] = True
     Dt: dupetable.Dupetable = dupetable.Dupetable(**option)
-    Dt.print_tree(outfile = pathlib.Path(outfile))
+
+    dupestree, dels, keeps = Dt.get_tree()
+
+    console.record = True
+    console.print("[red]deletions: "+str(dels) +
+                  " [green]keeps: "+str(keeps))
+    console.print(dupestree)
+    if outfile:
+        console.save_html(outfile)
+    console.record = False
 
     if do_move:
         Dt.delete(trash)
