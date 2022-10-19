@@ -342,11 +342,8 @@ class Dupetable(Dupes):
             console.print("[red]no dupes to delete")
             return
 
-        with Progress(console=console) as progress:
-            task_validate = progress.add_task(
-                "[green]validating dupes ...", total=1)
-            self.validate()
-            progress.update(task_validate, advance=1)
+        console.print("[green]validating dupes")
+        self.validate()
 
         filelist_chunked = list(
             chunked(self._deltable.chain_values(), 20))
