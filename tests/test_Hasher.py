@@ -86,6 +86,35 @@ class TestHasher:
         assert data_get_lookup.sort() == data_should_lookup.sort()
         assert data_get_permanent.sort() == data_should_permanent.sort()
 
+    def test_copy_dbcontent_for_dir_to_permanent(self, setup_tmp_path: str) -> None:
+        tmpdirname = setup_tmp_path
+        dbname = pl.Path(tmpdirname + "/.test_Hasher.sqlite")
+        path = pl.Path(tmpdirname + "/somedir")
+        path_2 = pl.Path(tmpdirname + "/somedir/somedir2")
+        path_1 = pl.Path(tmpdirname + "/somedir/somefile.txt")
+        pydupe.hasher.clean(dbname)
+        pydupe.hasher.scan_files_on_disk_and_insert_stats_in_db(dbname, path)
+        PydupeDB(dbname).copy_dbcontent_for_dir_to_permanent(path_2)
+
+        data_should_permanent: tp.List[tp.Optional[fparms]] = []
+        for item in path_2.rglob("*"):
+            data_should_permanent.append(from_path(item))
+
+        data_should_lookup: tp.List[tp.Optional[fparms]] = []
+        data_should_lookup.append(from_path(path_1)) 
+
+        sql_execute_permanent = "SELECT * FROM permanent"
+        sql_execute_lookup = "SELECT * FROM lookup"
+
+        data_get_permanent = [from_row(d) for d in PydupeDB(
+            dbname).execute(sql_execute_permanent).fetchall()]
+        data_get_lookup = [from_row(d) for d in PydupeDB(
+            dbname).execute(sql_execute_lookup).fetchall()]
+
+        assert data_get_lookup.sort() == data_should_lookup.sort()
+        assert data_get_permanent.sort() == data_should_permanent.sort()
+
+
     def notest_rehash_rows_where_hash_is_NULL(self, setup_tmp_path: str) -> None:
         tmpdirname = setup_tmp_path
         dbname = pl.Path(tmpdirname + "/.test_Hasher.sqlite")
