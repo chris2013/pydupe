@@ -11,9 +11,9 @@ if SYSTEM_ == 'Linux':
 elif SYSTEM_ == 'FreeBSD':
     HASHEXECUTE_1 = ['shasum', '-a', '256']
     HASHEXECUTE_2 = []
-elif SYSTEM_ == 'Windows':
-    HASHEXECUTE_1 = ['certUtil', '-hashfile']
-    HASHEXECUTE_2 = ['SHA256']
+# elif SYSTEM_ == 'Windows':
+#     HASHEXECUTE_1 = ['certUtil', '-hashfile']
+#     HASHEXECUTE_2 = ['SHA256']
 else:
     raise SystemExit("pydupe not yet verified on " + SYSTEM_)
 cnf : tp.Dict[str, tp.Any]= {}

@@ -15,19 +15,21 @@ from pydupe.utils import mytimer
 from pydupe.data import fparms, from_path
 
 FORMAT = "%(message)s"
-logging.basicConfig(level=cnf['LOGLEVEL'] , format=FORMAT, datefmt="[%X]", handlers=[
+logging.basicConfig(level=cnf['LOGLEVEL'], format=FORMAT, datefmt="[%X]", handlers=[
                     RichHandler(show_level=True, show_path=True, markup=True, console=console)])
 log = logging.getLogger(__name__)
+
 
 def hash_file(file: str) -> str:
     cmd: list[str] = cnf['HASHEXECUTE_1'] + [file]
     if cnf['HASHEXECUTE_2']:
         cmd += cnf['HASHEXECUTE_2']
 
-    sub = subprocess.Popen(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    sub = subprocess.Popen(
+        cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = sub.communicate()
     if stderr:
-        log.error("Errorcode: "+stderr+" while hashing "+file) 
+        log.error("Errorcode: "+stderr+" while hashing "+file)
     # hash ist ASCII, therefore no decode to UTF-8 necessary
     if cnf['SYSTEM'] == 'Windows':
         hsh = stdout.splitlines()[1]
@@ -35,6 +37,7 @@ def hash_file(file: str) -> str:
         hsh = stdout[0:64]
 
     return hsh
+
 
 @spinner(console, 'get file statistics')
 def scan_files_on_disk_and_insert_stats_in_db(dbname: pathlib.Path, path: pathlib.Path) -> int:
@@ -54,9 +57,11 @@ def scan_files_on_disk_and_insert_stats_in_db(dbname: pathlib.Path, path: pathli
 
     return len(list_of_fparms)
 
+
 def rehash_dupes_where_hash_is_NULL(dbname: pathlib.Path) -> int:
 
-    list_of_files_to_update = PydupeDB(dbname).get_list_of_equal_sized_files_where_hash_is_NULL()
+    list_of_files_to_update = PydupeDB(
+        dbname).get_list_of_equal_sized_files_where_hash_is_NULL()
 
     filelist_chunked = list(chunked(list_of_files_to_update, 1000))
 
@@ -93,11 +98,11 @@ def rehash_dupes_where_hash_is_NULL(dbname: pathlib.Path) -> int:
     return len(list_of_files_to_update)
 
 
-
 def clean(dbname: pathlib.Path) -> None:
     """ this deletes files in table lookup that are not on disk anymore but would be tried to get rehashed """
 
-    list_of_files_to_update = PydupeDB(dbname).get_list_of_equal_sized_files_where_hash_is_NULL()
+    list_of_files_to_update = PydupeDB(
+        dbname).get_list_of_equal_sized_files_where_hash_is_NULL()
 
     with PydupeDB(dbname) as db:
         for file in (pathlib.Path(x) for x in list_of_files_to_update if not pathlib.Path(x).is_file()):
