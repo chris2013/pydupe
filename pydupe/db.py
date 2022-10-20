@@ -140,17 +140,5 @@ class PydupeDB(object):
         get_sql = "SELECT filename, hash from lookup"
         return self.cur.execute(get_sql)
 
-    def move_dbcontent_for_dir_to_permanent(self, path: pathlib.Path) -> None:
-        self.copy_dir_to_table_permanent(path)
-        self.delete_dir(path)
-        self.commit()
-
-    def copy_dbcontent_for_dir_to_permanent(self, path: pathlib.Path) -> None:
-        self.copy_dir_to_table_permanent(path)
-        self.commit()
-
-    def copy_hash_from_permanent_if_unchanged_inode_size_mtime_ctime(self) -> None:
-        self.copy_hash_to_table_lookup()
-        self.commit()
 
 

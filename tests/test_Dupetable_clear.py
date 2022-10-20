@@ -1,7 +1,7 @@
 import os
 import pathlib
 import tempfile
-
+from pydupe import cmd_hash 
 import pydupe.dupetable as dupetable
 import pytest
 
@@ -30,7 +30,7 @@ class Test_check:
             file_is_dupe.write_text("some dummy text")
             dupe_in_dir.write_text("some dummy text")
 
-            pydupe.hasher.hashdir(dbname, cwd)
+            cmd_hash.hashdir(dbname, cwd)
             with PydupeDB(dbname) as db:
                 db.update_hash([(None, str(file_is_dupe))])
                 db.commit()

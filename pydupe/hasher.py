@@ -45,7 +45,7 @@ def scan_files_on_disk_and_insert_stats_in_db(dbname: pathlib.Path, path: pathli
         list_of_fparms: list[fparms] = []
         for item in filelist:
             if item.is_file() and not item.is_symlink():    # only files and no symlink make it into database
-                if "/." in (item_str := str(item)):
+                if "/." in str(item):
                     pass                                    # do not recurse hidden dirs and hidden files
                 else:
                     list_of_fparms.append(from_path(item))
@@ -92,14 +92,7 @@ def rehash_dupes_where_hash_is_NULL(dbname: pathlib.Path) -> int:
 
     return len(list_of_files_to_update)
 
-def hashdir(dbname: pathlib.Path, path: pathlib.Path) -> tp.Tuple[int, int]:
-    PydupeDB(dbname).delete_dir(path)
-    number_scanned = scan_files_on_disk_and_insert_stats_in_db(dbname, path)
-    PydupeDB(dbname).copy_hash_from_permanent_if_unchanged_inode_size_mtime_ctime()
-    number_hashed = rehash_dupes_where_hash_is_NULL(dbname)
-    PydupeDB(dbname).copy_dbcontent_for_dir_to_permanent(path)
-    
-    return number_scanned, number_hashed
+
 
 def clean(dbname: pathlib.Path) -> None:
     """ this deletes files in table lookup that are not on disk anymore but would be tried to get rehashed """

@@ -7,11 +7,9 @@ from datetime import datetime
 import rich_click as click
 
 import pydupe.dupetable as dupetable
-import pydupe.hasher
 from pydupe.console import console
 from pydupe.db import PydupeDB
-from pydupe.utils import mytimer
-
+from pydupe.cmd_hash import cmd_hash
 
 @click.group()
 @click.option('-db', '--dbname', required=False, default=str(pathlib.Path.home()) + '/.pydupe.sqlite', show_default=True, help='sqlite Database')
@@ -91,14 +89,7 @@ def hash(ctx: click.Context, path: str) -> None:
     """
     recursive hash files in PATH and store hash in database.
     """
-    path_pl: pathlib.Path = pathlib.Path(path).resolve()
-    t = mytimer() 
-    dbname: pathlib.Path = ctx.obj['dbname']
-    pydupe.hasher.clean(dbname)
-    number_scanned, number_hashed = pydupe.hasher.hashdir(dbname, path_pl)
-    console.print(
-        f"[green] scanned {number_scanned} and hashed thereof {number_hashed} files in {t.get} sec")
-
+    cmd_hash(dbname=ctx.obj['dbname'], path=path)    
 
 @cli.command()
 @click.pass_context

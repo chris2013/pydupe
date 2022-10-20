@@ -5,8 +5,8 @@ import typing as tp
 
 import pydupe.dupetable as dupetable
 import pytest
-from pydupe.db import PydupeDB
 import pydupe.hasher
+import pydupe.cmd_hash
 
 cwd = str(pl.Path.cwd())
 tdata = cwd + "/pydupe/pydupe/"
@@ -32,7 +32,7 @@ def setup_database() -> tp.Generator[tp.Any,tp.Any,tp.Any]:
         file_is_dupe.write_text("some dummy text") 
         dupe_in_dir.write_text("some dummy text") 
         
-        pydupe.hasher.hashdir(dbname, cwd)
+        pydupe.cmd_hash.hashdir(dbname, cwd)
 
         deldir = str(pl.Path.cwd() / "somedir")
         pattern = "_dupe"
