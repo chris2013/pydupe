@@ -83,7 +83,7 @@ def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global
         Dt.delete(trash)
 
 @cli.command()
-@click.argument('path', required=True, type=click.Path(exists=True))
+@click.argument('path', required=True, type=click.Path(exists=True, path_type=pathlib.Path))
 @click.pass_context
 def hash(ctx: click.Context, path: str) -> None:
     """

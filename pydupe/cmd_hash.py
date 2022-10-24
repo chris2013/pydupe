@@ -7,8 +7,8 @@ from pydupe.db import PydupeDB
 from pydupe.utils import mytimer
 
 
-def cmd_hash(dbname: str, path: str):
-    path_pl: pathlib.Path = pathlib.Path(path).resolve()
+def cmd_hash(dbname: str, path: pathlib.Path):
+    assert isinstance(path, pathlib.Path), 'must be of type Pathlib.Path'
     t = mytimer() 
     dbname: pathlib.Path = dbname
     pydupe.hasher.clean(dbname)

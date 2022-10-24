@@ -40,8 +40,7 @@ def hash_file(file: str) -> str:
 
 
 def scan_files_on_disk_and_insert_stats_in_db(dbname: pathlib.Path, path: pathlib.Path) -> int:
-    path = pathlib.Path(str(path)) # stupid fix
-    assert isinstance(path, pathlib.Path)
+    assert isinstance(path, pathlib.Path), 'must be of type Pathlib.Path'
 
     with PydupeDB(dbname) as db:
         filelist = list(path.rglob("*"))
