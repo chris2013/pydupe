@@ -85,7 +85,7 @@ def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global
 @cli.command()
 @click.argument('path', required=True, type=click.Path(exists=True, path_type=pathlib.Path))
 @click.pass_context
-def hash(ctx: click.Context, path: str) -> None:
+def hash(ctx: click.Context, path: pathlib.Path) -> None:
     """
     recursive hash files in PATH and store hash in database.
     """

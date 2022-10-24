@@ -1,12 +1,14 @@
 import os
 import pathlib
 import tempfile
-from pydupe import cmd_hash 
-import pydupe.dupetable as dupetable
-import pytest
 
-from pydupe.db import PydupeDB
+import pydupe.dupetable as dupetable
 import pydupe.hasher
+import pytest
+from click.testing import CliRunner
+from pydupe import cmd_hash
+from pydupe.cli import cli
+from pydupe.db import PydupeDB
 
 cwd = str(pathlib.Path.cwd())
 tdata = cwd + "/pydupe/pydupe/"
@@ -30,8 +32,9 @@ class Test_check:
             file_is_dupe.write_text("some dummy text")
             dupe_in_dir.write_text("some dummy text")
 
-            cmd_hash.hashdir(dbname, cwd)
-            # --> rewrite with CLI_runner()
+            runner = CliRunner()
+            runner.invoke(cli, ['--dbname', str(dbname), 'hash', str(cwd)])
+
 
             with PydupeDB(dbname) as db:
                 db.update_hash([(None, str(file_is_dupe))])
