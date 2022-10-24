@@ -38,7 +38,7 @@ def hash_file(file: str) -> str:
 
     return hsh
 
-
+@spinner(console, "scan files on disk")
 def scan_files_on_disk_and_insert_stats_in_db(dbname: pathlib.Path, path: pathlib.Path) -> int:
     assert isinstance(path, pathlib.Path), 'must be of type Pathlib.Path'
 

@@ -4,7 +4,7 @@ import functools
 
 console = Console(log_path=False)
 
-def spinner(console, msg, spinner="dots"):
+def spinner(console: Console, msg: str, spinner: str="dots"):
     def decorator_spinner(func):
         @functools.wraps(func)
         def wrapper_decorator(*args, **kwargs):

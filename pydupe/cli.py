@@ -36,9 +36,9 @@ def lst(ctx: click.Context, depth: int) -> None:
 
 @cli.command()
 @click.option('--match_deletions/--match_keeps', default=True, show_default=True, help='chooose [PATTERN] matches to select dupes to delete or dupes to keep.')
-@click.option('--autoselect/--no-autoselect', default=False, show_default=True, help='autoselect dupes to keep if all are mached')
+@click.option('--autoselect', is_flag=True, default=False, help='autoselect dupes if all are matched')
 @click.option('--dupes_global/--dupes_local', default=True, show_default=True, help='consider dupes outside chosen directory')
-@click.option('--do_move/--no-do_move', default=False, show_default=True, help='if True, dupes are moved to trash')
+@click.option('--do_move', is_flag=True, default=False, show_default=True, help='dupes are movedi if this flag is set')
 @click.option('--delete/--trash', default=False, show_default=True, help='delete dupes or use trash')
 @click.option('-tr', '--trash', required=False, default=pathlib.Path.home() / '.pydupeTrash', show_default=True, help='path to Trash. If set to "DELETE", no trash is used.', type=click.Path(path_type=pathlib.Path))
 @click.option('-of', '--outfile', required=False, default=pathlib.Path.home() / 'dupestree.html', show_default=True, help='html output for inspection in browser', type=click.Path(path_type=pathlib.Path))
