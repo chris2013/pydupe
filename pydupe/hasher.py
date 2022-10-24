@@ -22,8 +22,6 @@ log = logging.getLogger(__name__)
 
 def hash_file(file: str) -> str:
     cmd: list[str] = cnf['HASHEXECUTE_1'] + [file]
-    if cnf['HASHEXECUTE_2']:
-        cmd += cnf['HASHEXECUTE_2']
 
     sub = subprocess.Popen(
         cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

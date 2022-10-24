@@ -1,10 +1,11 @@
 from time import sleep
+from typing import Callable
 from rich.console import Console
 import functools
 
 console = Console(log_path=False)
 
-def spinner(console: Console, msg: str, spinner: str="dots"):
+def spinner(console: Console, msg: str, spinner: str="dots") -> Callable:
     def decorator_spinner(func):
         @functools.wraps(func)
         def wrapper_decorator(*args, **kwargs):
