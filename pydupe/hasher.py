@@ -39,8 +39,8 @@ def hash_file(file: str) -> str:
     return hsh
 
 
-@spinner(console, 'get file statistics')
 def scan_files_on_disk_and_insert_stats_in_db(dbname: pathlib.Path, path: pathlib.Path) -> int:
+    path = pathlib.Path(str(path)) # stupid fix
     assert isinstance(path, pathlib.Path)
 
     with PydupeDB(dbname) as db:
