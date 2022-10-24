@@ -11,13 +11,14 @@ from pydupe.console import console
 from pydupe.db import PydupeDB
 from pydupe.cmd_hash import cmd_hash
 
+
 @click.group()
-@click.option('-db', '--dbname', required=False, default=str(pathlib.Path.home()) + '/.pydupe.sqlite', show_default=True, help='sqlite Database')
+@click.option('-db', '--dbname', required=False, default=pathlib.Path.home() / '.pydupe.sqlite', show_default=True, help='sqlite Database', type=click.Path(path_type=pathlib.Path))
 @click.version_option()
 @click.pass_context
-def cli(ctx: click.Context, dbname: str) -> None:
+def cli(ctx: click.Context, dbname: pathlib.Path) -> None:
     ctx.obj = {
-        'dbname': pathlib.Path(dbname),
+        'dbname': dbname,
     }
 
 
@@ -38,12 +39,13 @@ def lst(ctx: click.Context, depth: int) -> None:
 @click.option('--autoselect/--no-autoselect', default=False, show_default=True, help='autoselect dupes to keep if all are mached')
 @click.option('--dupes_global/--dupes_local', default=True, show_default=True, help='consider dupes outside chosen directory')
 @click.option('--do_move/--no-do_move', default=False, show_default=True, help='if True, dupes are moved to trash')
-@click.option('-tr', '--trash', required=False, default=str(pathlib.Path.home()) + '/.pydupeTrash', show_default=True, help='path to Trash. If set to "DELETE", no trash is used.')
-@click.option('-of', '--outfile', required=False, default=str(pathlib.Path.home()) + '/dupestree.html', show_default=True, help='html output for inspection in browser')
+@click.option('--delete/--trash', default=False, show_default=True, help='delete dupes or use trash')
+@click.option('-tr', '--trash', required=False, default=pathlib.Path.home() / '.pydupeTrash', show_default=True, help='path to Trash. If set to "DELETE", no trash is used.', type=click.Path(path_type=pathlib.Path))
+@click.option('-of', '--outfile', required=False, default=pathlib.Path.home() / 'dupestree.html', show_default=True, help='html output for inspection in browser', type=click.Path(path_type=pathlib.Path))
 @click.argument('deldir', required=True)
 @click.argument('pattern', required=False, default=".")
 @click.pass_context
-def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global: bool, do_move: bool, trash: str, outfile: str, deldir: str, pattern: str) -> None:
+def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global: bool, do_move: bool, delete: bool, trash: pathlib.Path, outfile: pathlib.Path, deldir: str, pattern: str) -> None:
     """
     Dedupe Directory. Type dd --help for details.
     \b
@@ -55,10 +57,7 @@ def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global
         - if match_keeps, they are marked for deletion.
     4) if autoselect ist True and all dupes of a files are marked for deletion, one of them is deselected;
        if autoselect is False (the default), no deletion is performed if for a hash dupes are not contained in keeptable.
-
     if do_move is False, a dry run is done and a pretty printed table is shown and saved as html for further inspection.
-    if do_move is True, dupes marked for deletion will be moved to TRASH and deleted from the database. if TRASH equals "DELETE",
-    dupes are deleted instead of being moved to the Trash.
     """
     option: typing.Dict[str, typing.Any] = {}
     option['dbname'] = ctx.obj['dbname']
@@ -76,11 +75,12 @@ def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global
     console.print(f"[red]deletions: {dels} [green]keeps: {keeps}")
     console.print(dupestree)
     if outfile:
-        console.save_html(outfile)
+        console.save_html(str(outfile))
     console.record = False
 
     if do_move:
-        Dt.delete(trash)
+        Dt.delete(trash, delete)
+
 
 @cli.command()
 @click.argument('path', required=True, type=click.Path(exists=True, path_type=pathlib.Path))
@@ -89,7 +89,8 @@ def hash(ctx: click.Context, path: pathlib.Path) -> None:
     """
     recursive hash files in PATH and store hash in database.
     """
-    cmd_hash(dbname=ctx.obj['dbname'], path=path)    
+    cmd_hash(dbname=ctx.obj['dbname'], path=path)
+
 
 @cli.command()
 @click.pass_context

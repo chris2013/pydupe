@@ -64,16 +64,10 @@ def rename_if_exists(file: pl.Path) -> pl.Path:
                 return newPath
     return file
 
-def move_file_to_trash(*, file: pl.Path, trash: str) -> str:
+def move_file_to_trash(*, file: pl.Path, trash: pl.Path, delete: bool) -> str:
     assert isinstance(file, pl.Path)
 
-    if cnf['SYSTEM'] == 'Windows':
-        addpath = list(file.parts[1:])
-        target = pl.Path(trash)
-        for f in addpath:
-            target = target.joinpath(f)
-    else:
-        target = pl.Path(str(trash) + str(file))
+    target = pl.Path(str(trash) + str(file))
 
     target = rename_if_exists(target)
 
@@ -90,7 +84,7 @@ def move_file_to_trash(*, file: pl.Path, trash: str) -> str:
     #             delete_file(file=file, trash="DELETE")
     #     else:
     #         raise
-    if trash == 'DELETE':
+    if delete:
         file.unlink()
     else:
         if not target.parent.is_dir():
@@ -336,7 +330,7 @@ class Dupetable(Dupes):
             elif file.is_symlink():
                 raise DupeIsSymLink(str(file))
 
-    def delete(self, trash: str) -> None:
+    def delete(self, trash: pl.Path, delete: bool) -> None:
 
         if not (len(self._deltable) or self._deduped):
             console.print("[red]no dupes to delete")
@@ -356,7 +350,7 @@ class Dupetable(Dupes):
                 with PydupeDB(self._dbname) as db:
                     for delfile in chunk:
                         console.print(move_file_to_trash(
-                            file=delfile, trash=trash))
+                            file=delfile, trash=trash, delete=delete))
                         db.delete_file(filename=delfile)
                     db.commit()
 

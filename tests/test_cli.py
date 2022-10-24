@@ -163,7 +163,7 @@ class TestCLI:
 
         runner = CliRunner()
         runner.invoke(cli, ['--dbname', str(tmpdirname / '.testdb.sqlite'),
-                     'dd', '-tr', 'DELETE', '--do_move', 'somedir/somedir2'])
+                     'dd', '--delete', '--do_move', 'somedir/somedir2'])
 
         result = set()
         fldr = tmpdirname / 'somedir/somedir2'
