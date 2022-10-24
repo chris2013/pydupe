@@ -9,7 +9,7 @@ from pydupe.cli import cli
 import typing as tp
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture()
 def setup_tmp_path() -> tp.Iterator[pathlib.Path]:
     """ Fixture to set up PydupeDB in tmporary Directory"""
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -60,15 +60,14 @@ def setup_tmp_path() -> tp.Iterator[pathlib.Path]:
         os.chdir(old_cwd)
 
 
-# @pytest.mark.usefixtures("setup_tmp_path")
 class TestCLI:
 
     def test_dd(self, setup_tmp_path: pathlib.Path) -> None:
         tmpdirname = setup_tmp_path
         trash = tmpdirname / '.pydupeTrash'
         runner = CliRunner()
-        runner.invoke(cli, ['--dbname', str(tmpdirname / '.testdb.sqlite'),
-                      'dd', '-tr', str(trash), '--do_move', 'somedir/somedir2'])
+        runner.invoke(cli, ['--dbname', str(tmpdirname) + '/.testdb.sqlite',
+                      'dd', '-tr', str(trash), '--do_move', str(tmpdirname) + '/somedir/somedir2'])
 
         result = set()
         for child in trash.rglob('*'):

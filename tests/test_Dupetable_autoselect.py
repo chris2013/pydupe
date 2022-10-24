@@ -33,6 +33,7 @@ def setup_database() -> tp.Generator[tp.Any,tp.Any,tp.Any]:
         dupe_in_dir.write_text("some dummy text") 
         
         pydupe.cmd_hash.hashdir(dbname, cwd)
+        # --> XXX Rewrite with cli_runner()
 
         deldir = str(pl.Path.cwd() / "somedir")
         pattern = "_dupe"

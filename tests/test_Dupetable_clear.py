@@ -31,6 +31,8 @@ class Test_check:
             dupe_in_dir.write_text("some dummy text")
 
             cmd_hash.hashdir(dbname, cwd)
+            # --> rewrite with CLI_runner()
+
             with PydupeDB(dbname) as db:
                 db.update_hash([(None, str(file_is_dupe))])
                 db.commit()

@@ -12,11 +12,6 @@ def cmd_hash(dbname: str, path: str):
     t = mytimer() 
     dbname: pathlib.Path = dbname
     pydupe.hasher.clean(dbname)
-    number_scanned, number_hashed = hashdir(dbname, path_pl)
-    console.print(
-        f"[green] scanned {number_scanned} and hashed thereof {number_hashed} files in {t.get} sec")
-
-def hashdir(dbname: pathlib.Path, path: pathlib.Path) -> tp.Tuple[int, int]:
     with PydupeDB(dbname) as db:
         db.delete_dir(path)
         db.commit()
@@ -28,8 +23,9 @@ def hashdir(dbname: pathlib.Path, path: pathlib.Path) -> tp.Tuple[int, int]:
     with PydupeDB(dbname) as db:
         db.copy_dir_to_table_permanent(path)
         db.commit()
-    
-    return number_scanned, number_hashed
 
-if __name__ == "__main__":
-    cmd_hash(dbname=str(pathlib.Path.home()) + '/.pydupe.sqlite', path = pathlib.Path.cwd())
+    console.print(
+        f"[green] scanned {number_scanned} and hashed thereof {number_hashed} files in {t.get} sec")
+
+# if __name__ == "__main__":
+#    cmd_hash(dbname=str(pathlib.Path.home()) + '/.pydupe.sqlite', path = pathlib.Path.cwd())
