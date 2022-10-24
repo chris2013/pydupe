@@ -140,11 +140,20 @@ class TestLuTable:
         del a[7]
         assert a == LuTable([(1,2), (3,4)])
 
+    def test_as_dict_of_strsets(self) -> None:
+        a = LuTable([(1,2),(3,4)])
+        a[7] = [8, 9]
+        assert a.as_dict_of_strsets() == {
+            '1': {'2'},
+            '3': {'4'},
+            '7': {'8','9'}
+            }
+
     def test_as_dict_of_sets(self) -> None:
         a = LuTable([(1,2),(3,4)])
         a[7] = [8, 9]
         assert a.as_dict_of_sets() == {
-            '1': {'2'},
-            '3': {'4'},
-            '7': {'8','9'}
+            '1': {2},
+            '3': {4},
+            '7': {8,9}
             }

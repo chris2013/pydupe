@@ -147,7 +147,7 @@ def get_dupes(dbname: pl.Path = pl.Path.home() / ".pydupe.sqlite") -> LuTable[st
     return hashlu
 
 
-def dd3(dupes: LuTable[str, pl.Path], *, deldir: str, pattern: str, match_deletions: bool = True, dupes_global: bool = False, autoselect: bool = False) -> tp.Tuple[LuTable[str, pl.Path], LuTable[str, pl.Path]]:
+def dd3(dupes: LuTable[str, pl.Path], *, deldir: pl.Path, pattern: str, match_deletions: bool = True, dupes_global: bool = False, autoselect: bool = False) -> tp.Tuple[LuTable[str, pl.Path], LuTable[str, pl.Path]]:
     """
     identify dupes within <deldir> to delete based on <pattern> matching.
     match_deletions: if True (default), matches will be marked for deletion otherwise non-matches will be marked.
@@ -262,11 +262,11 @@ class Dupetable(Dupes):
     postprocessed by method dedupe. if _deduped is True, the postprocessing was done and keeptable and deltable are available.
     These tables can be extracted by method get_deltable and get_keeptable. Automatic postprocessing can be enabled by the flag dedupe."""
 
-    def __init__(self, *, deldir: str, pattern: str, match_deletions: bool = True, dupes_global: bool = False, autoselect: bool = False, dbname: pl.Path = pl.Path.home() / ".pydupe.sqlite", dedupe: bool = False) -> None:
+    def __init__(self, *, deldir: pl.Path, pattern: str, match_deletions: bool = True, dupes_global: bool = False, autoselect: bool = False, dbname: pl.Path = pl.Path.home() / ".pydupe.sqlite", dedupe: bool = False) -> None:
         super().__init__(dbname=dbname)
         self._deduped: bool = False
         self._dbname: pl.Path = dbname
-        self._deldir: str = deldir
+        self._deldir: pl.Path = deldir
         self._pattern: str = pattern
         self._match_deletions: bool = match_deletions
         self._dupes_global: bool = dupes_global

@@ -15,7 +15,7 @@ home = str(pl.Path.home())
 
 
 @pytest.fixture
-def setup_database() -> tp.Generator[tp.Any,tp.Any,tp.Any]:
+def setup_database() -> tp.Generator[tuple[pl.Path, dupetable.Dupetable],None , None]:
     """ Fixture to set up PydupeDB in tmporary Directory"""
     with tempfile.TemporaryDirectory() as newpath:
         old_cwd = os.getcwd()
@@ -36,7 +36,7 @@ def setup_database() -> tp.Generator[tp.Any,tp.Any,tp.Any]:
         runner = CliRunner()
         runner.invoke(cli, ['--dbname', str(dbname), 'hash', str(cwd)])
 
-        deldir = str(pl.Path.cwd() / "somedir")
+        deldir = pl.Path.cwd() / "somedir"
         pattern = "_dupe"
         match_deletions = True
         dupes_global = True
@@ -45,14 +45,14 @@ def setup_database() -> tp.Generator[tp.Any,tp.Any,tp.Any]:
 
         Dt = dupetable.Dupetable(dbname=dbname, deldir=deldir, pattern = pattern, match_deletions=match_deletions, dupes_global=dupes_global, autoselect=autoselect, dedupe=dedupe)
 
-        yield str(cwd), Dt
+        yield cwd, Dt
 
         os.chdir(old_cwd)
 
 
 class TestDupetable:
 
-    def test_Dupetable_deletions_global_pattern(self, setup_database: tuple[str, dupetable.Dupetable]) -> None:
+    def test_Dupetable_deletions_global_pattern(self, setup_database: tuple[pl.Path, dupetable.Dupetable]) -> None:
         p, Dt = setup_database
         
         d = Dt._deltable
@@ -60,12 +60,12 @@ class TestDupetable:
 
         assert d.as_dict_of_sets() == {
             '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4':
-                {p+'/somedir/file_is_dupe'}}
+                {p/'somedir/file_is_dupe'}}
         assert k.as_dict_of_sets() == {
-            '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4': {p+'/file_exists', p+'/somedir/somedir2/dupe2_in_dir', p+'/somedir/somedir2/dupe_in_dir'}
+            '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4': {p/'file_exists', p/'somedir/somedir2/dupe2_in_dir', p/'somedir/somedir2/dupe_in_dir'}
         }
 
-    def test_Dupetable_deletions_local_pattern(self, setup_database: tuple[str, dupetable.Dupetable]) -> None:
+    def test_Dupetable_deletions_local_pattern(self, setup_database: tuple[pl.Path, dupetable.Dupetable]) -> None:
         p, Dt = setup_database
         Dt._dupes_global = False
         Dt.dedupe()
@@ -75,12 +75,12 @@ class TestDupetable:
 
         assert d.as_dict_of_sets() == {
             '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4':
-                {p+'/somedir/file_is_dupe'}}
+                {p/'somedir/file_is_dupe'}}
         assert k.as_dict_of_sets() == {
-            '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4': {p+'/somedir/somedir2/dupe2_in_dir', p+'/somedir/somedir2/dupe_in_dir'}
+            '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4': {p/'somedir/somedir2/dupe2_in_dir', p/'somedir/somedir2/dupe_in_dir'}
         }
 
-    def test_Dupetable_deletions_global_nopattern(self, setup_database: tuple[str, dupetable.Dupetable]) -> None:
+    def test_Dupetable_deletions_global_nopattern(self, setup_database: tuple[pl.Path, dupetable.Dupetable]) -> None:
         p, Dt = setup_database
         Dt._pattern = "."
         Dt.dedupe()
@@ -89,13 +89,13 @@ class TestDupetable:
         k = Dt._keeptable
 
         assert d.as_dict_of_sets() == {
-            '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4': {p+'/somedir/file_is_dupe', p+'/somedir/somedir2/dupe2_in_dir', p+'/somedir/somedir2/dupe_in_dir'}
+            '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4': {p/'somedir/file_is_dupe', p/'somedir/somedir2/dupe2_in_dir', p/'somedir/somedir2/dupe_in_dir'}
         }
         assert k.as_dict_of_sets() == {
-            '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4': {p+'/file_exists'}
+            '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4': {p/'file_exists'}
         }
 
-    def test_Dupetable_deletions_global2_nopattern(self, setup_database: tuple[str, dupetable.Dupetable]) -> None:
+    def test_Dupetable_deletions_global2_nopattern(self, setup_database: tuple[pl.Path, dupetable.Dupetable]) -> None:
         p, Dt = setup_database
         Dt._pattern = "."
         Dt._deldir = p
@@ -107,11 +107,11 @@ class TestDupetable:
         assert d.as_dict_of_sets() == {}
         assert k.as_dict_of_sets() == {
             '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4':
-            {p+'/file_exists', p+'/somedir/file_is_dupe',
-             p+'/somedir/somedir2/dupe2_in_dir', p+'/somedir/somedir2/dupe_in_dir'}
+            {p/'file_exists', p/'somedir/file_is_dupe',
+             p/'somedir/somedir2/dupe2_in_dir', p/'somedir/somedir2/dupe_in_dir'}
         }
 
-    def test_Dupetable_deletions_local_nopattern(self, setup_database: tuple[str, dupetable.Dupetable]) -> None:
+    def test_Dupetable_deletions_local_nopattern(self, setup_database: tuple[pl.Path, dupetable.Dupetable]) -> None:
         p, Dt = setup_database
         Dt._pattern = "."
         Dt._dupes_global = False
@@ -122,10 +122,10 @@ class TestDupetable:
         
         assert d.as_dict_of_sets() == {}
         assert k.as_dict_of_sets() == {
-            '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4': {p+'/somedir/file_is_dupe', p+'/somedir/somedir2/dupe2_in_dir', p+'/somedir/somedir2/dupe_in_dir'}
+            '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4': {p/'somedir/file_is_dupe', p/'somedir/somedir2/dupe2_in_dir', p/'somedir/somedir2/dupe_in_dir'}
         }
 
-    def test_Dupetable_keeps_global_pattern(self, setup_database: tuple[str, dupetable.Dupetable]) -> None:
+    def test_Dupetable_keeps_global_pattern(self, setup_database: tuple[pl.Path, dupetable.Dupetable]) -> None:
         p, Dt = setup_database
         Dt._match_deletions = False
         Dt.dedupe()
@@ -135,14 +135,14 @@ class TestDupetable:
 
         assert d.as_dict_of_sets() == {
             '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4':
-            {p+'/file_exists', p+'/somedir/somedir2/dupe2_in_dir',
-                p+'/somedir/somedir2/dupe_in_dir'}
+            {p/'file_exists', p/'somedir/somedir2/dupe2_in_dir',
+                p/'somedir/somedir2/dupe_in_dir'}
         }
         assert k.as_dict_of_sets() == {
             '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4':
-                {p+'/somedir/file_is_dupe'}}
+                {p/'somedir/file_is_dupe'}}
 
-    def test_Dupetable_keeps_local_pattern(self, setup_database: tuple[str, dupetable.Dupetable]) -> None:
+    def test_Dupetable_keeps_local_pattern(self, setup_database: tuple[pl.Path, dupetable.Dupetable]) -> None:
         p, Dt = setup_database
         Dt._match_deletions = False
         Dt._dupes_global = False
@@ -153,13 +153,13 @@ class TestDupetable:
 
         assert d.as_dict_of_sets() == {
             '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4':
-            {p+'/somedir/somedir2/dupe2_in_dir', p+'/somedir/somedir2/dupe_in_dir'}}
+            {p/'somedir/somedir2/dupe2_in_dir', p/'somedir/somedir2/dupe_in_dir'}}
 
         assert k.as_dict_of_sets() == {
             '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4':
-                {p+'/somedir/file_is_dupe'}}
+                {p/'somedir/file_is_dupe'}}
 
-    def test_Dupetable_keeps_global_nopattern(self, setup_database: tuple[str, dupetable.Dupetable]) -> None:
+    def test_Dupetable_keeps_global_nopattern(self, setup_database: tuple[pl.Path, dupetable.Dupetable]) -> None:
         p, Dt = setup_database
         Dt._match_deletions = False
         Dt._pattern = "."
@@ -169,12 +169,12 @@ class TestDupetable:
         k = Dt._keeptable
 
         assert d.as_dict_of_sets() == {
-            '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4': {p+'/file_exists'}}
+            '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4': {p/'file_exists'}}
         assert k.as_dict_of_sets() == {
             '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4':
-            {p+'/somedir/file_is_dupe', p+'/somedir/somedir2/dupe2_in_dir', p+'/somedir/somedir2/dupe_in_dir'}}
+            {p/'somedir/file_is_dupe', p/'somedir/somedir2/dupe2_in_dir', p/'somedir/somedir2/dupe_in_dir'}}
 
-    def test_Dupetable_keeps_global2_nopattern(self, setup_database: tuple[str, dupetable.Dupetable]) -> None:
+    def test_Dupetable_keeps_global2_nopattern(self, setup_database: tuple[pl.Path, dupetable.Dupetable]) -> None:
         p, Dt = setup_database
         Dt._match_deletions = False
         Dt._pattern = "."
@@ -187,11 +187,11 @@ class TestDupetable:
         assert d.as_dict_of_sets() == {}
         assert k.as_dict_of_sets() == {
             '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4':
-            {p+'/file_exists', p+'/somedir/file_is_dupe',
-             p+'/somedir/somedir2/dupe2_in_dir', p+'/somedir/somedir2/dupe_in_dir'}
+            {p/'file_exists', p/'somedir/file_is_dupe',
+             p/'somedir/somedir2/dupe2_in_dir', p/'somedir/somedir2/dupe_in_dir'}
         }
 
-    def test_Dupetable_keeps_local_nopattern(self, setup_database: tuple[str, dupetable.Dupetable]) -> None:
+    def test_Dupetable_keeps_local_nopattern(self, setup_database: tuple[pl.Path, dupetable.Dupetable]) -> None:
         p, Dt = setup_database
         Dt._match_deletions = False
         Dt._dupes_global = False
@@ -203,5 +203,5 @@ class TestDupetable:
         
         assert d.as_dict_of_sets() == {}
         assert k.as_dict_of_sets() == {
-            '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4': {p+'/somedir/file_is_dupe', p+'/somedir/somedir2/dupe2_in_dir', p+'/somedir/somedir2/dupe_in_dir'}
+            '093d9d18a0d8233e8fadd6a9c4cf4a5c578f9dc1cf64f54589943fdb840ee0a4': {p/'somedir/file_is_dupe', p/'somedir/somedir2/dupe2_in_dir', p/'somedir/somedir2/dupe_in_dir'}
         }

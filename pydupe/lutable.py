@@ -159,8 +159,14 @@ class LuTable(tp.Generic[K, V]):
     def __delitem__(self, key: K) -> None:
         del self._hashlu[key]
 
-    def as_dict_of_sets(self) -> tp.Dict[str, set[str]]:
-        dict_of_sets: tp.Dict[str, set[str]] = {}
+    def as_dict_of_sets(self) -> tp.Dict[str, set[tp.Any]]:
+        dict_of_sets: tp.Dict[str, set[tp.Any]] = {}
+        for hash in self._hashlu.keys():
+            dict_of_sets[str(hash)] = {item for item in self._hashlu[hash]}
+        return dict_of_sets
+
+    def as_dict_of_strsets(self) -> tp.Dict[str, set[str]]:
+        dict_of_sets: tp.Dict[str, set[tp.Any]] = {}
         for hash in self._hashlu.keys():
             dict_of_sets[str(hash)] = {str(item) for item in self._hashlu[hash]}
         return dict_of_sets

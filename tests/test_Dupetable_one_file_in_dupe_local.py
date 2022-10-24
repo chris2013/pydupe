@@ -49,7 +49,7 @@ def setup_database() -> tp.Generator[tp.Any, tp.Any, tp.Any]:
 class TestDupetable_local_scope:
     def test_Dupetable_deletions_local_scope(self) -> None:
         hashlu = dupetable.get_dupes(dbname=pl.Path.cwd() / '.dbtest.sqlite')
-        deldir = "/tests/tdata/somedir"
+        deldir = pl.Path('/tests/tdata/somedir')
         d, k = dupetable.dd3(hashlu, deldir=deldir, pattern="_dupe",
                              match_deletions=True, dupes_global=False, autoselect=False)
         assert d.as_dict_of_sets() == {}

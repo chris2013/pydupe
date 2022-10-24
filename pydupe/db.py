@@ -82,30 +82,18 @@ class PydupeDB(object):
         copy_sql = "REPLACE INTO permanent select * FROM lookup WHERE filename LIKE ?"
         return self.cur.execute(copy_sql, (dirname_str + '%',))
 
-    def copy_hash_to_table_lookup(self, *, check_filename: bool=True) -> sqlite3.Cursor:
-        if check_filename:
-            updateLookup_sql = """
-            UPDATE lookup
-            SET hash = permanent.hash
-            FROM permanent
-            WHERE
-                permanent.size = lookup.size AND
-                permanent.inode = lookup.inode AND
-                permanent.ctime = lookup.ctime AND
-                permanent.mtime = lookup.mtime AND
-                permanent.filename = lookup.filename
-            """
-        else:
-            updateLookup_sql = """
-            UPDATE lookup
-            SET hash = permanent.hash
-            FROM permanent
-            WHERE
-                permanent.size = lookup.size AND
-                permanent.inode = lookup.inode AND
-                permanent.ctime = lookup.ctime AND
-                permanent.mtime = lookup.mtime
-            """
+    def copy_hash_to_table_lookup(self) -> sqlite3.Cursor:
+        updateLookup_sql = """
+        UPDATE lookup
+        SET hash = permanent.hash
+        FROM permanent
+        WHERE
+            permanent.size = lookup.size AND
+            permanent.inode = lookup.inode AND
+            permanent.ctime = lookup.ctime AND
+            permanent.mtime = lookup.mtime AND
+            permanent.filename = lookup.filename
+        """
         return self.cur.execute(updateLookup_sql)
 
     def execute(self, sql: str) -> sqlite3.Cursor:

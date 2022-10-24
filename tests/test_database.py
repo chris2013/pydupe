@@ -421,7 +421,7 @@ class TestDatabase:
              'ctime': 1630424506}]
 
         with PydupeDB(dbname) as db:
-            db.copy_hash_to_table_lookup(check_filename=True)
+            db.copy_hash_to_table_lookup()
             db.commit()
             data_get_lookup = db.execute('SELECT * FROM lookup').fetchall()
             data_get_permanent = db.execute('SELECT * FROM permanent').fetchall()

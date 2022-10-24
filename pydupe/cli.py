@@ -42,10 +42,10 @@ def lst(ctx: click.Context, depth: int) -> None:
 @click.option('--delete/--trash', default=False, show_default=True, help='delete dupes or use trash')
 @click.option('-tr', '--trash', required=False, default=pathlib.Path.home() / '.pydupeTrash', show_default=True, help='path to Trash. If set to "DELETE", no trash is used.', type=click.Path(path_type=pathlib.Path))
 @click.option('-of', '--outfile', required=False, default=pathlib.Path.home() / 'dupestree.html', show_default=True, help='html output for inspection in browser', type=click.Path(path_type=pathlib.Path))
-@click.argument('deldir', required=True)
+@click.argument('deldir', required=True, type=click.Path(exists=True, path_type=pathlib.Path))
 @click.argument('pattern', required=False, default=".")
 @click.pass_context
-def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global: bool, do_move: bool, delete: bool, trash: pathlib.Path, outfile: pathlib.Path, deldir: str, pattern: str) -> None:
+def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global: bool, do_move: bool, delete: bool, trash: pathlib.Path, outfile: pathlib.Path, deldir: pathlib.Path, pattern: str) -> None:
     """
     Dedupe Directory. Type dd --help for details.
     \b
@@ -61,7 +61,7 @@ def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global
     """
     option: typing.Dict[str, typing.Any] = {}
     option['dbname'] = ctx.obj['dbname']
-    option['deldir'] = str(pathlib.Path(deldir).resolve())
+    option['deldir'] = deldir.resolve()
     option['pattern'] = pattern
     option['match_deletions'] = match_deletions
     option['dupes_global'] = dupes_global
