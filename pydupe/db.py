@@ -78,8 +78,11 @@ class PydupeDB(object):
         return self.cur.execute(delete_sql, (str(filename),))
 
     def copy_dir_to_table_permanent(self, dirname: pathlib.Path) -> sqlite3.Cursor:
+        assert dirname.is_absolute()
+
         dirname_str: str = str(dirname)
-        copy_sql = "REPLACE INTO permanent select * FROM lookup WHERE filename LIKE ?"
+        copy_sql = "REPLACE INTO permanent select * FROM lookup WHERE filename LIKE ? AND hash is not NULL"
+        # permanent is just a cache for already hashed files
         return self.cur.execute(copy_sql, (dirname_str + '%',))
 
     def copy_hash_to_table_lookup(self) -> sqlite3.Cursor:

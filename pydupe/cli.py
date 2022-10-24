@@ -89,7 +89,7 @@ def hash(ctx: click.Context, path: pathlib.Path) -> None:
     """
     recursive hash files in PATH and store hash in database.
     """
-    cmd_hash(dbname=ctx.obj['dbname'], path=path)
+    cmd_hash(dbname=ctx.obj['dbname'], path=path.resolve())
 
 
 @cli.command()

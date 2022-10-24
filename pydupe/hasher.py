@@ -1,6 +1,7 @@
 import concurrent.futures
 import logging
 import pathlib
+from re import I
 import subprocess
 import typing as tp
 
@@ -39,6 +40,7 @@ def hash_file(file: str) -> str:
 @spinner(console, "scan files on disk")
 def scan_files_on_disk_and_insert_stats_in_db(dbname: pathlib.Path, path: pathlib.Path) -> int:
     assert isinstance(path, pathlib.Path), 'must be of type Pathlib.Path'
+    assert path.is_absolute, 'path must be absolute'
 
     with PydupeDB(dbname) as db:
         filelist = list(path.rglob("*"))

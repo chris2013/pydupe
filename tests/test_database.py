@@ -5,6 +5,7 @@ from pydupe.data import fparms
 from pydupe.db import PydupeDB
 import pathlib as pl
 import typing as tp
+
 @pytest.fixture
 def setup_database() -> tp.Generator[None,None,None]:
     """ Fixture to se-t up PydupeDB in tmporary Directory"""

@@ -19,7 +19,7 @@ def checkHash(fp: fparms) -> None:
 
 def from_path(pth: pl.Path, hash: Optional[str] = None) -> fparms:
     stat = pth.stat()
-    return fparms(filename=str(pth), hash=hash, size=stat.st_size, inode=stat.st_ino, mtime=stat.st_mtime, ctime=stat.st_ctime)
+    return fparms(filename=str(pth.resolve()), hash=hash, size=stat.st_size, inode=stat.st_ino, mtime=stat.st_mtime, ctime=stat.st_ctime)
 
 def from_row(row: sqlite3.Row) -> fparms:
     return fparms(filename=row['filename'], hash=row['hash'], size=row['size'], inode=row['inode'], mtime=row['mtime'], ctime=row['ctime'])
