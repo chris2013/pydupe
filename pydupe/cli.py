@@ -6,7 +6,7 @@ from pathlib import Path as p
 import rich_click as click
 
 import pydupe.dupetable as dupetable
-from pydupe.cmd import cmd_hash, cmd_purge
+from pydupe.cmd import cmd_hash, cmd_purge, cmd_clean
 from pydupe.console import console
 from pydupe.db import PydupeDB
 
@@ -109,7 +109,8 @@ def clean(ctx: click.Context) -> None:
     clean database: delete lookup
     """
     dbname = ctx.obj['dbname']
-    cmd_purge(dbname)
+    cmd_clean(dbname)
+
 @cli.command()
 def help() -> None:
     """
