@@ -1,6 +1,6 @@
 import os
 import pathlib
-import pathlib as pl
+from pathlib import Path as p
 import tempfile
 import typing as tp
 
@@ -20,7 +20,7 @@ def setup_database() -> tp.Generator[tp.Any,tp.Any,tp.Any]:
     with tempfile.TemporaryDirectory() as newpath:
         old_cwd = os.getcwd()
         os.chdir(newpath)
-        dbname = pl.Path.cwd() / ".dbtest.sqlite"
+        dbname = p.cwd() / ".dbtest.sqlite"
         data = [
             fparms(filename= '/tests/tdata/file_exists',
              hash= 'be1c1a22b4055523a0d736f4174ef1d6be1c1a22b4055523a0d736f4174ef1d6',
@@ -65,8 +65,8 @@ def setup_database() -> tp.Generator[tp.Any,tp.Any,tp.Any]:
 @pytest.mark.usefixtures("setup_database")
 class TestDedupeWithin:
     def test_dedupe_within(self) -> None:
-        hashlu = dupetable.get_dupes(dbname = pl.Path.cwd() / '.dbtest.sqlite')
-        deldir = pl.Path('/tests/tdata/somedir')
+        hashlu = dupetable.get_dupes(dbname = p.cwd() / '.dbtest.sqlite')
+        deldir = p('/tests/tdata/somedir')
         deltable, keeptable = dupetable.dd3(hashlu, deldir=deldir, pattern="_dupe", dupes_global=True, match_deletions=True, autoselect=False)
         
         assert deltable.as_dict_of_strsets() == {
@@ -81,8 +81,8 @@ class TestDedupeWithin:
     
     
     def test_dedupe_within_match_deletions_False(self) -> None:
-        hashlu = dupetable.get_dupes(dbname = pl.Path.cwd() / '.dbtest.sqlite')
-        deldir = pl.Path('/tests/tdata/somedir/')
+        hashlu = dupetable.get_dupes(dbname = p.cwd() / '.dbtest.sqlite')
+        deldir = p('/tests/tdata/somedir/')
         _, keeptable = dupetable.dd3(hashlu, deldir=deldir, pattern="file_", match_deletions=False)
         assert keeptable.as_dict_of_strsets() == {
             'be1c1a22b4055523a0d736f4174ef1d6be1c1a22b4055523a0d736f4174ef1d6':
@@ -95,9 +95,9 @@ class TestDedupeWithin:
     
     
     def test_dedupe_within_autoselect_dupes_XXX(self) -> None:
-        hashlu = dupetable.get_dupes(dbname = pl.Path.cwd() / '.dbtest.sqlite')
+        hashlu = dupetable.get_dupes(dbname = p.cwd() / '.dbtest.sqlite')
         assert hashlu.as_dict_of_strsets() == {'3aa2ed13ee40ba651e87a0fd60b753d03aa2ed13ee40ba651e87a0fd60b753d0': {'/tests/tdata/somedir/dupe2_in_dir', '/tests/tdata/somedir/dupe_in_dir'}, 'be1c1a22b4055523a0d736f4174ef1d6be1c1a22b4055523a0d736f4174ef1d6': {'/tests/tdata/file_exists', '/tests/tdata/somedir/file_is_dupe', '/tests/tdata/somedir/somedir2/file_is_dupe2'}}
-        deldir = pl.Path('/tests/tdata/somedir')
+        deldir = p('/tests/tdata/somedir')
         deltable, keeptable = dupetable.dd3(hashlu, deldir=deldir, pattern="_dupe", autoselect=True, dupes_global=False, match_deletions=True)
     
         assert deltable.as_dict_of_strsets() == {
@@ -111,8 +111,8 @@ class TestDedupeWithin:
     
     
     def test_dedupe_within_dupes_global_on_match_deletions(self) -> None:
-        hashlu = dupetable.get_dupes(dbname = pl.Path.cwd() / '.dbtest.sqlite')
-        deldir = pl.Path('/tests/tdata/somedir/somedir2')
+        hashlu = dupetable.get_dupes(dbname = p.cwd() / '.dbtest.sqlite')
+        deldir = p('/tests/tdata/somedir/somedir2')
         deltable, keeptable = dupetable.dd3(hashlu, deldir=deldir, pattern="file_", dupes_global=True, match_deletions=True)
         assert deltable.as_dict_of_strsets() == {
             'be1c1a22b4055523a0d736f4174ef1d6be1c1a22b4055523a0d736f4174ef1d6':
@@ -126,8 +126,8 @@ class TestDedupeWithin:
     
     
     def test_dedupe_within_dupes_global_on_match_keeps(self) -> None:
-        hashlu = dupetable.get_dupes(dbname = pl.Path.cwd() / '.dbtest.sqlite')
-        deldir = pl.Path('/tests/tdata/somedir/somedir2')
+        hashlu = dupetable.get_dupes(dbname = p.cwd() / '.dbtest.sqlite')
+        deldir = p('/tests/tdata/somedir/somedir2')
         deltable, keeptable = dupetable.dd3(hashlu, deldir=deldir, pattern="file_", dupes_global=True, match_deletions=False, autoselect=False)
         assert keeptable.as_dict_of_strsets() == {
             'be1c1a22b4055523a0d736f4174ef1d6be1c1a22b4055523a0d736f4174ef1d6':
@@ -141,8 +141,8 @@ class TestDedupeWithin:
     
     
     def test_dedupe_within_dupes_global_off_autoselect_off(self) -> None:
-        hashlu = dupetable.get_dupes(dbname = pl.Path.cwd() / '.dbtest.sqlite')
-        deldir = pl.Path('/tests/tdata/somedir')
+        hashlu = dupetable.get_dupes(dbname = p.cwd() / '.dbtest.sqlite')
+        deldir = p('/tests/tdata/somedir')
         deltable, keeptable = dupetable.dd3(hashlu, deldir=deldir, pattern="file_", dupes_global = False, match_deletions = True, autoselect = False)
         assert deltable.as_dict_of_strsets() == {}
         assert keeptable.as_dict_of_strsets() == {
@@ -152,8 +152,8 @@ class TestDedupeWithin:
     
     
     def test_dedupe_within_dupes_global_off_autoselect_on(self) -> None:
-        hashlu = dupetable.get_dupes(dbname = pl.Path.cwd() / '.dbtest.sqlite')
-        deldir = pl.Path('/tests/tdata/somedir')
+        hashlu = dupetable.get_dupes(dbname = p.cwd() / '.dbtest.sqlite')
+        deldir = p('/tests/tdata/somedir')
         deltable, keeptable = dupetable.dd3(hashlu, deldir=deldir, pattern="file_", dupes_global = False, match_deletions = True, autoselect = True)
         assert deltable.as_dict_of_strsets() == {
             'be1c1a22b4055523a0d736f4174ef1d6be1c1a22b4055523a0d736f4174ef1d6':

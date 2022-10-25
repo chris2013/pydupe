@@ -1,5 +1,5 @@
 from typing import Optional, NamedTuple
-import pathlib as pl
+from pathlib import Path as p
 import sqlite3
 import re
 
@@ -17,7 +17,7 @@ def checkHash(fp: fparms) -> None:
     if fp.hash and not valid_sha256.match(fp.hash):
         raise ValueError("not a valid sha256 hash")
 
-def from_path(pth: pl.Path, hash: Optional[str] = None) -> fparms:
+def from_path(pth: p, hash: Optional[str] = None) -> fparms:
     stat = pth.stat()
     return fparms(filename=str(pth.resolve()), hash=hash, size=stat.st_size, inode=stat.st_ino, mtime=stat.st_mtime, ctime=stat.st_ctime)
 

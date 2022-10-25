@@ -1,6 +1,6 @@
 import os
-import pathlib
 import tempfile
+from pathlib import Path as p
 
 import pydupe.dupetable as dupetable
 import pydupe.hasher
@@ -10,17 +10,17 @@ from pydupe import cmd
 from pydupe.cli import cli
 from pydupe.db import PydupeDB
 
-cwd = str(pathlib.Path.cwd())
+cwd = str(p.cwd())
 tdata = cwd + "/pydupe/pydupe/"
-home = str(pathlib.Path.home())
+home = str(p.home())
 
 class Test_check:
     def test_check_file_on_disk_before_clear(self) -> None:
         with tempfile.TemporaryDirectory() as newpath:
             old_cwd = os.getcwd()
             os.chdir(newpath)
-            cwd = pathlib.Path(newpath)
-            dbname = pathlib.Path(newpath) / ".pydupe.sqlite"
+            cwd = p(newpath)
+            dbname = p(newpath) / ".pydupe.sqlite"
             file_exists = cwd / "file_exists"
             file_is_dupe = cwd / "somedir" / "file_is_dupe"
             dupe2_in_dir = cwd / "somedir" / "somedir2" / "dupe2_in_dir"

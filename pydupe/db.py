@@ -1,4 +1,4 @@
-import pathlib
+from pathlib import Path as p
 import sqlite3
 import typing as tp
 import types as ty
@@ -16,7 +16,7 @@ class PydupeDB(object):
     Every change needs to be explicitely comitted!
     """
 
-    def __init__(self, dbname: pathlib.Path = pathlib.Path.home() / ".pydupe.sqlite"):
+    def __init__(self, dbname: p = p.home() / ".pydupe.sqlite"):
         self._dbname = str(dbname)
         self.connection = sqlite3.connect(self._dbname)
         self.connection.row_factory = sqlite3.Row
@@ -68,16 +68,16 @@ class PydupeDB(object):
         get_sql = "SELECT l.filename, l.hash FROM lookup l JOIN (SELECT hash, count(*) c FROM lookup GROUP BY hash HAVING c > 1) h on l.hash = h.hash order by l.hash"
         return self.cur.execute(get_sql)
 
-    def delete_dir(self, dirname: pathlib.Path) -> sqlite3.Cursor:
+    def delete_dir(self, dirname: p) -> sqlite3.Cursor:
         dirname_str: str = str(dirname)
         delete_sql = "DELETE FROM lookup WHERE filename LIKE ?"
         return self.cur.execute(delete_sql, (dirname_str + '%',))
 
-    def delete_file_lookup(self, filename: pathlib.Path) -> sqlite3.Cursor:
+    def delete_file_lookup(self, filename: p) -> sqlite3.Cursor:
         delete_sql = "DELETE from lookup where filename is ?"
         return self.cur.execute(delete_sql, (str(filename),))
 
-    def delete_file_permanent(self, filename: pathlib.Path) -> sqlite3.Cursor:
+    def delete_file_permanent(self, filename: p) -> sqlite3.Cursor:
         delete_sql = "DELETE from permanent where filename is ?"
         return self.cur.execute(delete_sql, (str(filename),))
 
@@ -89,7 +89,7 @@ class PydupeDB(object):
         get_sql = "DELETE FROM lookup"
         return self.cur.execute(get_sql)
 
-    def copy_dir_to_table_permanent(self, dirname: pathlib.Path) -> sqlite3.Cursor:
+    def copy_dir_to_table_permanent(self, dirname: p) -> sqlite3.Cursor:
         assert dirname.is_absolute()
 
         dirname_str: str = str(dirname)

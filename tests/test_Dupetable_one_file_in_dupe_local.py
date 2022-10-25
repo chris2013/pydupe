@@ -1,6 +1,6 @@
 import os
 import pathlib
-import pathlib as pl
+from pathlib import Path as p
 import tempfile
 import typing as tp
 
@@ -20,7 +20,7 @@ def setup_database() -> tp.Generator[tp.Any, tp.Any, tp.Any]:
     with tempfile.TemporaryDirectory() as newpath:
         old_cwd = os.getcwd()
         os.chdir(newpath)
-        dbname = pl.Path(newpath + "/.dbtest.sqlite")
+        dbname = p(newpath + "/.dbtest.sqlite")
         data = [
             fparms(filename= '/tests/tdata/file_exists',
              hash= 'be1c1a22b4055523a0d736f4174ef1d6be1c1a22b4055523a0d736f4174ef1d6',
@@ -48,8 +48,8 @@ def setup_database() -> tp.Generator[tp.Any, tp.Any, tp.Any]:
 @pytest.mark.usefixtures("setup_database")
 class TestDupetable_local_scope:
     def test_Dupetable_deletions_local_scope(self) -> None:
-        hashlu = dupetable.get_dupes(dbname=pl.Path.cwd() / '.dbtest.sqlite')
-        deldir = pl.Path('/tests/tdata/somedir')
+        hashlu = dupetable.get_dupes(dbname=p.cwd() / '.dbtest.sqlite')
+        deldir = p('/tests/tdata/somedir')
         d, k = dupetable.dd3(hashlu, deldir=deldir, pattern="_dupe",
                              match_deletions=True, dupes_global=False, autoselect=False)
         assert d.as_dict_of_sets() == {}

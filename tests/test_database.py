@@ -3,7 +3,7 @@ import tempfile
 import pytest
 from pydupe.data import fparms
 from pydupe.db import PydupeDB
-import pathlib as pl
+from pathlib import Path as p
 import typing as tp
 
 @pytest.fixture
@@ -12,7 +12,7 @@ def setup_database() -> tp.Generator[None,None,None]:
     with tempfile.TemporaryDirectory() as newpath:
         old_cwd = os.getcwd()
         os.chdir(newpath)
-        dbname = pl.Path.cwd() / ".dbtest.sqlite"
+        dbname = p.cwd() / ".dbtest.sqlite"
         data = [fparms(filename='/tests/tdata/file_exists',
              hash='be1c1a22b4055523a0d736f4174ef1d6be1c1a22b4055523a0d736f4174ef1d6',
              size=1,
@@ -52,7 +52,7 @@ class TestDatabase:
 
     def test_insert_get(self) -> None:
         """check data inserted in fixture 'setup_database' works."""
-        dbname = pl.Path.cwd() / ".dbtest.sqlite"
+        dbname = p.cwd() / ".dbtest.sqlite"
         with PydupeDB(dbname) as db:
             data_get = db.get().fetchall()
         data_dict = [dict(row) for row in data_get]
@@ -85,7 +85,7 @@ class TestDatabase:
     def test_update_hash(self) -> None:
         """check hash update works."""
         
-        dbname = pl.Path.cwd() / ".dbtest.sqlite"
+        dbname = p.cwd() / ".dbtest.sqlite"
         with PydupeDB(dbname) as db:
             data_get = db.get().fetchall()
         data_dict = [dict(row) for row in data_get]
@@ -154,7 +154,7 @@ class TestDatabase:
     def test_rollback(self) -> None:
         """check autorolback after e.g. hash update works."""
         
-        dbname = pl.Path.cwd() / ".dbtest.sqlite"
+        dbname = p.cwd() / ".dbtest.sqlite"
         with PydupeDB(dbname) as db:
             data_get = db.get().fetchall()
         data_dict = [dict(row) for row in data_get]
@@ -222,7 +222,7 @@ class TestDatabase:
 
     def test_get_list_of_files_where_hash_is_NULL(self) -> None:
         
-        dbname = pl.Path.cwd() / ".dbtest.sqlite"
+        dbname = p.cwd() / ".dbtest.sqlite"
         data = [fparms(
             filename='/tests/tdata/file_exists',
             hash=None,
@@ -243,7 +243,7 @@ class TestDatabase:
 
     def test_get_list_of_files_in_dir(self) -> None:
         
-        dbname = pl.Path.cwd() / ".dbtest.sqlite"
+        dbname = p.cwd() / ".dbtest.sqlite"
         with PydupeDB(dbname) as db:
             data_get = db.get_list_of_files_in_dir(
                 '/tests/tdata/somedir')
@@ -255,7 +255,7 @@ class TestDatabase:
 
     def test_get_file_hash(self) -> None:
         
-        dbname = pl.Path.cwd() / ".dbtest.sqlite"
+        dbname = p.cwd() / ".dbtest.sqlite"
         with PydupeDB(dbname) as db:
             data_get = db.get_file_hash()
             data_dict = [dict(row) for row in data_get]
@@ -273,9 +273,9 @@ class TestDatabase:
 
     def test_delete_dir(self) -> None:
         
-        dbname = pl.Path.cwd() / ".dbtest.sqlite"
+        dbname = p.cwd() / ".dbtest.sqlite"
         with PydupeDB(dbname) as db:
-            db.delete_dir(pl.Path('/tests/tdata/somedir'))
+            db.delete_dir(p('/tests/tdata/somedir'))
             data_get = db.get().fetchall()
         
         data_dict = [dict(row) for row in data_get]
@@ -289,9 +289,9 @@ class TestDatabase:
 
     def test_delete_file(self) -> None:
         
-        dbname = pl.Path.cwd() / ".dbtest.sqlite"
+        dbname = p.cwd() / ".dbtest.sqlite"
         with PydupeDB(dbname) as db:
-            db.delete_file_lookup(filename=pl.Path('/tests/tdata/file_exists'))
+            db.delete_file_lookup(filename=p('/tests/tdata/file_exists'))
             data_get = db.get_file_hash().fetchall()
         
         data_dict = [dict(row) for row in data_get]
@@ -308,10 +308,10 @@ class TestDatabase:
     def test_copy_dir_to_table_permanent(self) -> None:
         """check data inserted in fixture 'setup_database' works."""
         
-        dbname = pl.Path.cwd() / ".dbtest.sqlite"
+        dbname = p.cwd() / ".dbtest.sqlite"
         with PydupeDB(dbname) as db:
             db.copy_dir_to_table_permanent(
-                pl.Path('/tests/tdata/somedir'))
+                p('/tests/tdata/somedir'))
             db.commit()
             data_get_lookup = db.execute('SELECT * FROM lookup').fetchall()
             data_get_permanent = db.execute('SELECT * FROM permanent').fetchall()
@@ -365,7 +365,7 @@ class TestDatabase:
     def test_copy_hash_to_table_lookup_and_clear_permanent(self) -> None:
         """check data inserted in fixture 'setup_database' works."""
         
-        dbname = pl.Path.cwd() / ".dbtest.sqlite"
+        dbname = p.cwd() / ".dbtest.sqlite"
         with PydupeDB(dbname) as db:
             db.execute("INSERT INTO permanent SELECT * FROM lookup WHERE filename like '/tests/tdata/somedir%'")
             db.update_hash([(None, '/tests/tdata/file_exists')])

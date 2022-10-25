@@ -1,22 +1,22 @@
-from fcntl import F_SEAL_SEAL
 import logging
-import pathlib
 import typing
 from datetime import datetime
+from fcntl import F_SEAL_SEAL
+from pathlib import Path as p
 
 import rich_click as click
 
 import pydupe.dupetable as dupetable
+from pydupe.cmd import cmd_hash, cmd_purge
 from pydupe.console import console
 from pydupe.db import PydupeDB
-from pydupe.cmd import cmd_hash, cmd_purge
 
 
 @click.group()
-@click.option('-db', '--dbname', required=False, default=pathlib.Path.home() / '.pydupe.sqlite', show_default=True, help='sqlite Database', type=click.Path(path_type=pathlib.Path))
+@click.option('-db', '--dbname', required=False, default=p.home() / '.pydupe.sqlite', show_default=True, help='sqlite Database', type=click.Path(path_type=p))
 @click.version_option()
 @click.pass_context
-def cli(ctx: click.Context, dbname: pathlib.Path) -> None:
+def cli(ctx: click.Context, dbname: p) -> None:
     ctx.obj = {
         'dbname': dbname,
     }
@@ -40,12 +40,12 @@ def lst(ctx: click.Context, depth: int) -> None:
 @click.option('--dupes_global/--dupes_local', default=True, show_default=True, help='consider dupes outside chosen directory')
 @click.option('--do_move', is_flag=True, default=False, show_default=True, help='dupes are movedi if this flag is set')
 @click.option('--delete/--trash', default=False, show_default=True, help='delete dupes or use trash')
-@click.option('-tr', '--trash', required=False, default=pathlib.Path.home() / '.pydupeTrash', show_default=True, help='path to Trash. If set to "DELETE", no trash is used.', type=click.Path(path_type=pathlib.Path))
-@click.option('-of', '--outfile', required=False, default=pathlib.Path.home() / 'dupestree.html', show_default=True, help='html output for inspection in browser', type=click.Path(path_type=pathlib.Path))
-@click.argument('deldir', required=True, type=click.Path(exists=True, path_type=pathlib.Path))
+@click.option('-tr', '--trash', required=False, default=p.home() / '.pydupeTrash', show_default=True, help='path to Trash. If set to "DELETE", no trash is used.', type=click.Path(path_type=p))
+@click.option('-of', '--outfile', required=False, default=p.home() / 'dupestree.html', show_default=True, help='html output for inspection in browser', type=click.Path(path_type=p))
+@click.argument('deldir', required=True, type=click.Path(exists=True, path_type=p))
 @click.argument('pattern', required=False, default=".")
 @click.pass_context
-def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global: bool, do_move: bool, delete: bool, trash: pathlib.Path, outfile: pathlib.Path, deldir: pathlib.Path, pattern: str) -> None:
+def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global: bool, do_move: bool, delete: bool, trash: p, outfile: p, deldir: p, pattern: str) -> None:
     """
     Dedupe Directory. Type dd --help for details.
     \b
@@ -83,9 +83,9 @@ def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global
 
 
 @cli.command()
-@click.argument('path', required=True, type=click.Path(exists=True, path_type=pathlib.Path))
+@click.argument('path', required=True, type=click.Path(exists=True, path_type=p))
 @click.pass_context
-def hash(ctx: click.Context, path: pathlib.Path) -> None:
+def hash(ctx: click.Context, path: p) -> None:
     """
     recursive hash files in PATH and store hash in database.
     """

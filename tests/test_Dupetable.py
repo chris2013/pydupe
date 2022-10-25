@@ -1,5 +1,5 @@
 import os
-import pathlib as pl
+from pathlib import Path as p
 import tempfile
 import typing as tp
 
@@ -8,9 +8,9 @@ import pytest
 from pydupe.db import PydupeDB
 from pydupe.data import fparms
 
-cwd = str(pl.Path.cwd())
+cwd = str(p.cwd())
 tdata = cwd + "/pydupe/pydupe/tests/tdata/"
-home = str(pl.Path.home())
+home = str(p.home())
 
 @pytest.fixture
 def setup_database() -> tp.Generator[tp.Any, tp.Any, tp.Any]:
@@ -18,7 +18,7 @@ def setup_database() -> tp.Generator[tp.Any, tp.Any, tp.Any]:
     with tempfile.TemporaryDirectory() as newpath:
         old_cwd = os.getcwd()
         os.chdir(newpath)
-        dbname = pl.Path.cwd() / ".dbtest.sqlite"
+        dbname = p.cwd() / ".dbtest.sqlite"
         data = [
             fparms(filename='/tests/tdata/file_exists',
              hash='be1c1a22b4055523a0d736f4174ef1d6be1c1a22b4055523a0d736f4174ef1d6',
@@ -58,7 +58,7 @@ def setup_database() -> tp.Generator[tp.Any, tp.Any, tp.Any]:
 class TestDupetable:
 
     def test_Dupetable_basic(self) -> None:
-        hashlu = dupetable.get_dupes(dbname=pl.Path.cwd() / '.dbtest.sqlite')
+        hashlu = dupetable.get_dupes(dbname=p.cwd() / '.dbtest.sqlite')
         assert hashlu.as_dict_of_strsets() == {
             'be1c1a22b4055523a0d736f4174ef1d6be1c1a22b4055523a0d736f4174ef1d6': {
                 '/tests/tdata/file_exists',
@@ -69,8 +69,8 @@ class TestDupetable:
         }
 
     def test_Dupetable_tables(self) -> None:
-        hashlu = dupetable.get_dupes(dbname=pl.Path.cwd() / '.dbtest.sqlite')
-        deldir = pl.Path("/tests/tdata/somedir")
+        hashlu = dupetable.get_dupes(dbname=p.cwd() / '.dbtest.sqlite')
+        deldir = p("/tests/tdata/somedir")
         d, k = dupetable.dd3(hashlu, deldir=deldir, pattern="_dupe", match_deletions=True, dupes_global=True, autoselect=False)
         assert d.as_dict_of_strsets() == {
             'be1c1a22b4055523a0d736f4174ef1d6be1c1a22b4055523a0d736f4174ef1d6':
@@ -81,7 +81,7 @@ class TestDupetable:
         }
 
     def test_dir_counter(self) -> None:
-        Dp = dupetable.Dupes(dbname=pl.Path.cwd() / '.dbtest.sqlite')
+        Dp = dupetable.Dupes(dbname=p.cwd() / '.dbtest.sqlite')
         dir_counter = Dp.get_dir_counter()
         assert dir_counter == {
             '/tests/tdata': 1,
@@ -89,7 +89,7 @@ class TestDupetable:
         }
 
     def test_raise_if_all_files_marked_for_deletion(self) -> None:
-        Dp = dupetable.Dupetable(dbname=pl.Path.cwd() / '.dbtest.sqlite', deldir=pl.Path("/"), pattern=".", autoselect=True, dedupe=True)
+        Dp = dupetable.Dupetable(dbname=p.cwd() / '.dbtest.sqlite', deldir=p("/"), pattern=".", autoselect=True, dedupe=True)
         
         assert Dp.dupes.as_dict_of_strsets() == {
             '3aa2ed13ee40ba651e87a0fd60b753d03aa2ed13ee40ba651e87a0fd60b753d0': {

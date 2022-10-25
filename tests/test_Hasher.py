@@ -1,4 +1,4 @@
-import pathlib as pl
+from pathlib import Path as p
 import tempfile
 import typing as tp
 
@@ -12,7 +12,7 @@ import pydupe.hasher
 def setup_tmp_path() -> tp.Generator[tp.Any, tp.Any, tp.Any]:
     """ Fixture to set up PydupeDB in tmporary Directory"""
     with tempfile.TemporaryDirectory() as tmpdirname:
-        somedir = pl.Path(tmpdirname) / 'somedir'
+        somedir = p(tmpdirname) / 'somedir'
         somedir.mkdir()
         somefile = somedir / 'somefile.txt'
         with somefile.open('w') as f:
@@ -46,8 +46,8 @@ def sqlite3_dictsort(lst: tp.List[dict[str, str]])-> tp.List[dict[str, str]]:
 class TestHasher:
     def test_fixture_and_from_row(self, setup_tmp_path: str) -> None:
         tmpdirname = setup_tmp_path
-        dbname = pl.Path(tmpdirname + "/.test_Hasher.sqlite")
-        path = pl.Path(tmpdirname + "/somedir")
+        dbname = p(tmpdirname + "/.test_Hasher.sqlite")
+        path = p(tmpdirname + "/somedir")
         pydupe.hasher.clean(dbname)
         pydupe.hasher.scan_files_on_disk_and_insert_stats_in_db(dbname, path)
         data_should: tp.List[tp.Optional[fparms]] = []
@@ -60,10 +60,10 @@ class TestHasher:
 
     def test_move_dbcontent_for_dir_to_permanent(self, setup_tmp_path: str) -> None:
         tmpdirname = setup_tmp_path
-        dbname = pl.Path(tmpdirname + "/.test_Hasher.sqlite")
-        path = pl.Path(tmpdirname + "/somedir")
-        path_2 = pl.Path(tmpdirname + "/somedir/somedir2")
-        path_1 = pl.Path(tmpdirname + "/somedir/somefile.txt")
+        dbname = p(tmpdirname + "/.test_Hasher.sqlite")
+        path = p(tmpdirname + "/somedir")
+        path_2 = p(tmpdirname + "/somedir/somedir2")
+        path_1 = p(tmpdirname + "/somedir/somefile.txt")
         pydupe.hasher.clean(dbname)
         pydupe.hasher.scan_files_on_disk_and_insert_stats_in_db(dbname, path)
         with PydupeDB(dbname) as db:
@@ -91,10 +91,10 @@ class TestHasher:
 
     def test_copy_dbcontent_for_dir_to_permanent(self, setup_tmp_path: str) -> None:
         tmpdirname = setup_tmp_path
-        dbname = pl.Path(tmpdirname + "/.test_Hasher.sqlite")
-        path = pl.Path(tmpdirname + "/somedir")
-        path_2 = pl.Path(tmpdirname + "/somedir/somedir2")
-        path_1 = pl.Path(tmpdirname + "/somedir/somefile.txt")
+        dbname = p(tmpdirname + "/.test_Hasher.sqlite")
+        path = p(tmpdirname + "/somedir")
+        path_2 = p(tmpdirname + "/somedir/somedir2")
+        path_1 = p(tmpdirname + "/somedir/somefile.txt")
         pydupe.hasher.clean(dbname)
         pydupe.hasher.scan_files_on_disk_and_insert_stats_in_db(dbname, path)
         with PydupeDB(dbname) as db:
@@ -122,8 +122,8 @@ class TestHasher:
 
     def notest_rehash_rows_where_hash_is_NULL(self, setup_tmp_path: str) -> None:
         tmpdirname = setup_tmp_path
-        dbname = pl.Path(tmpdirname + "/.test_Hasher.sqlite")
-        path = pl.Path(tmpdirname + "/somedir/somedir2")
+        dbname = p(tmpdirname + "/.test_Hasher.sqlite")
+        path = p(tmpdirname + "/somedir/somedir2")
         pydupe.hasher.clean(dbname)
         pydupe.hasher.scan_files_on_disk_and_insert_stats_in_db(dbname, path)
 

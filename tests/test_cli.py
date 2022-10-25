@@ -1,5 +1,5 @@
 import os
-import pathlib
+from pathlib import Path as p
 import tempfile
 import shutil
 
@@ -9,13 +9,12 @@ from pydupe.cli import cli
 import typing as tp
 
 from pydupe.db import PydupeDB
-from pydupe.utils import P, S
 
 
 runner = CliRunner()
 
 @pytest.fixture()
-def setup_tmp_path() -> tp.Iterator[pathlib.Path]:
+def setup_tmp_path() -> tp.Iterator[p]:
     """ Fixture to set up PydupeDB in tmporary Directory"""
     with tempfile.TemporaryDirectory() as tmpdirname:
         old_cwd = os.getcwd()
@@ -23,7 +22,7 @@ def setup_tmp_path() -> tp.Iterator[pathlib.Path]:
 
         dbname = tmpdirname + '/.testdb.sqlite'
 
-        somedir = pathlib.Path(tmpdirname) / 'somedir'
+        somedir = p(tmpdirname) / 'somedir'
         somedir.mkdir()
 
         somedir2 = somedir / 'somedir2'
@@ -60,14 +59,14 @@ def setup_tmp_path() -> tp.Iterator[pathlib.Path]:
         runner = CliRunner()
         runner.invoke(cli, ['--dbname', dbname, 'hash', tmpdirname])
 
-        yield pathlib.Path(tmpdirname)
+        yield p(tmpdirname)
 
         os.chdir(old_cwd)
 
 
 class TestCLI:
 
-    def test_dd(self, setup_tmp_path: pathlib.Path) -> None:
+    def test_dd(self, setup_tmp_path: p) -> None:
         tmpdirname = setup_tmp_path
         trash = tmpdirname / '.pydupeTrash'
         runner = CliRunner()
@@ -82,12 +81,12 @@ class TestCLI:
         assert result == {'file1', 'file2',
                           'file3', 'file4', 'file5', 'file6', }
 
-    def test_do_move_with_rename_file_1(self, setup_tmp_path: pathlib.Path) -> None:
+    def test_do_move_with_rename_file_1(self, setup_tmp_path: p) -> None:
         tmpdirname = setup_tmp_path
         trash = tmpdirname / '.pydupeTrash'
         trash.mkdir()
 
-        fileexist = pathlib.Path(
+        fileexist = p(
             str(trash) + str(tmpdirname) + '/somedir/somedir2')
         fileexist.mkdir(parents=True)
         fileexist = fileexist.joinpath('file1')
@@ -105,12 +104,12 @@ class TestCLI:
         assert result == {'file1', 'file1_1', 'file2',
                           'file3', 'file4', 'file5', 'file6', }
 
-    def test_do_move_with_rename_file_2(self, setup_tmp_path: pathlib.Path) -> None:
+    def test_do_move_with_rename_file_2(self, setup_tmp_path: p) -> None:
         tmpdirname = setup_tmp_path
         trash = tmpdirname / '.pydupeTrash'
         trash.mkdir()
 
-        path = pathlib.Path(str(trash) + str(tmpdirname) + '/somedir/somedir2')
+        path = p(str(trash) + str(tmpdirname) + '/somedir/somedir2')
         path.mkdir(parents=True)
         fileexist1 = path.joinpath('file1')
         fileexist1.write_text('some content 1')
@@ -130,7 +129,7 @@ class TestCLI:
         assert result == {'file1', 'file1_1', 'file1_2', 'file2',
                           'file3', 'file4', 'file5', 'file6', }
 
-    def test_no_symlink_in_database(self, setup_tmp_path: pathlib.Path) -> None:
+    def test_no_symlink_in_database(self, setup_tmp_path: p) -> None:
         tmpdirname = setup_tmp_path
         trash = tmpdirname / '.pydupeTrash'
         trash.mkdir()
@@ -153,7 +152,7 @@ class TestCLI:
         assert result == {'file1', 'file2',
                           'file3', 'file4', 'file5', 'file6', }
 
-    def test_purge(self, setup_tmp_path: pathlib.Path) -> None:
+    def test_purge(self, setup_tmp_path: p) -> None:
         tmpdirname = setup_tmp_path
         dbname = tmpdirname / '.testdb.sqlite'
         added_file = tmpdirname / 'addedfile'
@@ -181,13 +180,13 @@ class TestCLI:
         assert str(added_file) not in filelist_in_permanent
         assert str(added_file2) in filelist_in_permanent
 
-    def test_clean(self, setup_tmp_path: pathlib.Path) -> None:
+    def test_clean(self, setup_tmp_path: p) -> None:
         tmpdirname = setup_tmp_path
         dbname = tmpdirname / '.testdb.sqlite'
 
         with PydupeDB(dbname) as db:
             filelist_in_lookup = sorted(
-                [S(P(x['filename']).relative_to(tmpdirname)) for x in db.get()])
+                [str(p(x['filename']).relative_to(tmpdirname)) for x in db.get()])
         assert filelist_in_lookup == ['somedir/file1_cpy', 'somedir/file2_cpy', 'somedir/file3_cpy', 'somedir/file4_cpy', 'somedir/file5_cpy', 'somedir/file6_cpy',
                                       'somedir/somedir2/file1', 'somedir/somedir2/file2', 'somedir/somedir2/file3', 'somedir/somedir2/file4', 'somedir/somedir2/file5', 'somedir/somedir2/file6']
 
@@ -195,5 +194,5 @@ class TestCLI:
 
         with PydupeDB(dbname) as db:
             filelist_in_lookup = sorted(
-                [S(P(x['filename']).relative_to(tmpdirname)) for x in db.get()])
+                [str(p(x['filename']).relative_to(tmpdirname)) for x in db.get()])
         assert filelist_in_lookup == []

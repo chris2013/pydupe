@@ -1,5 +1,5 @@
 import pytest
-import pathlib as pl
+from pathlib import Path as p
 import tempfile
 from pydupe.data import fparms, checkHash, from_path
 
@@ -19,7 +19,7 @@ class TestFparms:
     
     def test_from_path(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdirname:
-            somefile = pl.Path(tmpdirname) / 'somefile.txt'
+            somefile = p(tmpdirname) / 'somefile.txt'
             with somefile.open('w') as f:
                 f.write('sometext')
             fp = from_path(somefile)

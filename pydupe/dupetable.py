@@ -1,12 +1,11 @@
 import copy
 import itertools
 import logging
-import pathlib as pl
 import re
 import shutil
 import sys
 import typing as tp
-import shutil
+from pathlib import Path as p
 
 from more_itertools import chunked
 from rich.logging import RichHandler
@@ -50,7 +49,7 @@ class DupeNotValidated(Error):
     """Argument missing."""
 
 
-def rename_if_exists(file: pl.Path) -> pl.Path:
+def rename_if_exists(file: p) -> p:
     # rename if file exists
 
     if file.exists():
@@ -64,10 +63,10 @@ def rename_if_exists(file: pl.Path) -> pl.Path:
                 return newPath
     return file
 
-def move_file_to_trash(*, file: pl.Path, trash: pl.Path, delete: bool) -> str:
-    assert isinstance(file, pl.Path)
+def move_file_to_trash(*, file: p, trash: p, delete: bool) -> str:
+    assert isinstance(file, p)
 
-    target = pl.Path(str(trash) + str(file))
+    target = p(str(trash) + str(file))
 
     target = rename_if_exists(target)
 
@@ -94,12 +93,12 @@ def move_file_to_trash(*, file: pl.Path, trash: pl.Path, delete: bool) -> str:
     return str(file)
 
 
-def is_relative_to(parent: pl.Path, testfile: pl.Path) -> bool:
+def is_relative_to(parent: p, testfile: p) -> bool:
     """
     this is basically the is_relative_to function from pl available in python 3.9
     """
-    assert isinstance(parent, pl.Path)
-    assert isinstance(testfile, pl.Path)
+    assert isinstance(parent, p)
+    assert isinstance(testfile, p)
 
     if sys.version_info.major >= 3 and sys.version_info.minor >= 9:
         return testfile.is_relative_to(parent)
@@ -108,7 +107,7 @@ def is_relative_to(parent: pl.Path, testfile: pl.Path) -> bool:
         return any(cmp)
 
 
-def check_and_autoselect(*, deltable: LuTable[str, pl.Path], keeptable: LuTable[str, pl.Path], autoselect_pattern: str = ".") -> tuple[LuTable[str, pl.Path], LuTable[str, pl.Path]]:
+def check_and_autoselect(*, deltable: LuTable[str, p], keeptable: LuTable[str, p], autoselect_pattern: str = ".") -> tuple[LuTable[str, p], LuTable[str, p]]:
     """
     autoselect filters items that are contained in deltable (marked for deletion) and
     at the same time are not contained in keeptable. This is to avoid a deletion of all
@@ -117,7 +116,7 @@ def check_and_autoselect(*, deltable: LuTable[str, pl.Path], keeptable: LuTable[
     """
 
     autoselect_pattern_compiled = re.compile(autoselect_pattern)
-    old_deltable: LuTable[str, pl.Path] = copy.deepcopy(deltable)
+    old_deltable: LuTable[str, p] = copy.deepcopy(deltable)
 
     for hsh in sorted(old_deltable.keys()):
         if hsh not in keeptable.keys():
@@ -137,17 +136,17 @@ def check_and_autoselect(*, deltable: LuTable[str, pl.Path], keeptable: LuTable[
     return deltable, keeptable
 
 
-def get_dupes(dbname: pl.Path = pl.Path.home() / ".pydupe.sqlite") -> LuTable[str, pl.Path]:
-    hashlu: LuTable[str, pl.Path] = LuTable()
+def get_dupes(dbname: p = p.home() / ".pydupe.sqlite") -> LuTable[str, p]:
+    hashlu: LuTable[str, p] = LuTable()
     with PydupeDB(dbname) as db:
         for row in db.get_dupes():
-            file_as_path = pl.Path(row['filename'])
+            file_as_path = p(row['filename'])
             hsh: str = row['hash']
             hashlu.add((hsh, file_as_path))
     return hashlu
 
 
-def dd3(dupes: LuTable[str, pl.Path], *, deldir: pl.Path, pattern: str, match_deletions: bool = True, dupes_global: bool = False, autoselect: bool = False) -> tp.Tuple[LuTable[str, pl.Path], LuTable[str, pl.Path]]:
+def dd3(dupes: LuTable[str, p], *, deldir: p, pattern: str, match_deletions: bool = True, dupes_global: bool = False, autoselect: bool = False) -> tp.Tuple[LuTable[str, p], LuTable[str, p]]:
     """
     identify dupes within <deldir> to delete based on <pattern> matching.
     match_deletions: if True (default), matches will be marked for deletion otherwise non-matches will be marked.
@@ -158,13 +157,13 @@ def dd3(dupes: LuTable[str, pl.Path], *, deldir: pl.Path, pattern: str, match_de
     # deldir ist the Directory to investigate
 
     # in_deldir_hashlu and outside_deldir_hashlu separate dupes in deldir from dupes outside deldir
-    in_deldir_hashlu: LuTable[str, pl.Path] = LuTable()
-    outside_deldir_hashlu: LuTable[str, pl.Path] = LuTable()
+    in_deldir_hashlu: LuTable[str, p] = LuTable()
+    outside_deldir_hashlu: LuTable[str, p] = LuTable()
     t: mytimer = mytimer()
 
     for hsh, f in dupes:
-        if pl.Path(f).is_relative_to(deldir):
-            #if is_relative_to(parent=pl.Path(deldir), testfile=f):
+        if p(f).is_relative_to(deldir):
+            #if is_relative_to(parent=p(deldir), testfile=f):
             in_deldir_hashlu.add((hsh, f))
         else:
             outside_deldir_hashlu.add((hsh, f))
@@ -175,8 +174,8 @@ def dd3(dupes: LuTable[str, pl.Path], *, deldir: pl.Path, pattern: str, match_de
     outside_deldir_hashlu.ldel(delitems)
 
     # match_pattern_hashlu and no_match_pattern_hashlu contain matches/no-matches to pattern for files within deldir
-    match_pattern_hashlu: LuTable[str, pl.Path] = LuTable()
-    no_match_pattern_hashlu: LuTable[str, pl.Path] = LuTable()
+    match_pattern_hashlu: LuTable[str, p] = LuTable()
+    no_match_pattern_hashlu: LuTable[str, p] = LuTable()
 
     pattern_compiled = re.compile(pattern)
 
@@ -188,8 +187,8 @@ def dd3(dupes: LuTable[str, pl.Path], *, deldir: pl.Path, pattern: str, match_de
     log.debug("done: partition matches "+t.get)
 
     # keeptable and deltable are hash-lookups for files to keep and delete respectively
-    keeptable: LuTable[str, pl.Path] = LuTable()
-    deltable: LuTable[str, pl.Path] = LuTable()
+    keeptable: LuTable[str, p] = LuTable()
+    deltable: LuTable[str, p] = LuTable()
 
     # now sort the matches in deltable or keeptable and trat also global dupes
     if match_deletions:
@@ -232,8 +231,8 @@ def dd3(dupes: LuTable[str, pl.Path], *, deldir: pl.Path, pattern: str, match_de
 
 class Dupes:
 
-    def __init__(self, dbname: pl.Path = pl.Path.home() / ".pydupe.sqlite") -> None:
-        self.dupes: LuTable[str, pl.Path] = get_dupes(dbname)
+    def __init__(self, dbname: p = p.home() / ".pydupe.sqlite") -> None:
+        self.dupes: LuTable[str, p] = get_dupes(dbname)
 
     def get_dir_counter(self) -> tp.Counter[str]:
         alldupes = self.dupes.chain_values()
@@ -262,17 +261,17 @@ class Dupetable(Dupes):
     postprocessed by method dedupe. if _deduped is True, the postprocessing was done and keeptable and deltable are available.
     These tables can be extracted by method get_deltable and get_keeptable. Automatic postprocessing can be enabled by the flag dedupe."""
 
-    def __init__(self, *, deldir: pl.Path, pattern: str, match_deletions: bool = True, dupes_global: bool = False, autoselect: bool = False, dbname: pl.Path = pl.Path.home() / ".pydupe.sqlite", dedupe: bool = False) -> None:
+    def __init__(self, *, deldir: p, pattern: str, match_deletions: bool = True, dupes_global: bool = False, autoselect: bool = False, dbname: p = p.home() / ".pydupe.sqlite", dedupe: bool = False) -> None:
         super().__init__(dbname=dbname)
         self._deduped: bool = False
-        self._dbname: pl.Path = dbname
-        self._deldir: pl.Path = deldir
+        self._dbname: p = dbname
+        self._deldir: p = deldir
         self._pattern: str = pattern
         self._match_deletions: bool = match_deletions
         self._dupes_global: bool = dupes_global
         self._autoselect: bool = autoselect
-        self._keeptable: LuTable[str, pl.Path] = LuTable()
-        self._deltable: LuTable[str, pl.Path] = LuTable()
+        self._keeptable: LuTable[str, p] = LuTable()
+        self._deltable: LuTable[str, p] = LuTable()
 
         if dedupe:
             log.debug("start deduping")
@@ -284,10 +283,10 @@ class Dupetable(Dupes):
             self.dupes, deldir=self._deldir, pattern=self._pattern, match_deletions=self._match_deletions, dupes_global=self._dupes_global, autoselect=self._autoselect)
         self._deduped = True
 
-    def get_deltable(self) -> LuTable[str, pl.Path]:
+    def get_deltable(self) -> LuTable[str, p]:
         return self._deltable
 
-    def get_keeptable(self) -> LuTable[str, pl.Path]:
+    def get_keeptable(self) -> LuTable[str, p]:
         return self._keeptable
 
     def get_tree(self) -> tuple[Tree, int, int]:
@@ -330,7 +329,7 @@ class Dupetable(Dupes):
             elif file.is_symlink():
                 raise DupeIsSymLink(str(file))
 
-    def delete(self, trash: pl.Path, delete: bool) -> None:
+    def delete(self, trash: p, delete: bool) -> None:
 
         if not (len(self._deltable) or self._deduped):
             console.print("[red]no dupes to delete")

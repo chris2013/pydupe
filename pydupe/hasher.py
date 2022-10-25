@@ -1,6 +1,6 @@
 import concurrent.futures
 import logging
-import pathlib
+from pathlib import Path as p
 from re import I
 import subprocess
 import typing as tp
@@ -38,8 +38,8 @@ def hash_file(file: str) -> str:
     return hsh
 
 @spinner(console, "scan files on disk")
-def scan_files_on_disk_and_insert_stats_in_db(dbname: pathlib.Path, path: pathlib.Path) -> int:
-    assert isinstance(path, pathlib.Path), 'must be of type Pathlib.Path'
+def scan_files_on_disk_and_insert_stats_in_db(dbname: p, path: p) -> int:
+    assert isinstance(path, p), 'must be of type Pathlib.Path'
     assert path.is_absolute, 'path must be absolute'
 
     with PydupeDB(dbname) as db:
@@ -57,7 +57,7 @@ def scan_files_on_disk_and_insert_stats_in_db(dbname: pathlib.Path, path: pathli
     return len(list_of_fparms)
 
 
-def rehash_dupes_where_hash_is_NULL(dbname: pathlib.Path) -> int:
+def rehash_dupes_where_hash_is_NULL(dbname: p) -> int:
 
     list_of_files_to_update = PydupeDB(
         dbname).get_list_of_equal_sized_files_where_hash_is_NULL()
@@ -97,13 +97,13 @@ def rehash_dupes_where_hash_is_NULL(dbname: pathlib.Path) -> int:
     return len(list_of_files_to_update)
 
 
-def clean(dbname: pathlib.Path) -> None:
+def clean(dbname: p) -> None:
     """ this deletes files in table lookup that are not on disk anymore but would be tried to get rehashed """
 
     list_of_files_to_update = PydupeDB(
         dbname).get_list_of_equal_sized_files_where_hash_is_NULL()
 
     with PydupeDB(dbname) as db:
-        for file in (pathlib.Path(x) for x in list_of_files_to_update if not pathlib.Path(x).is_file()):
+        for file in (p(x) for x in list_of_files_to_update if not p(x).is_file()):
             db.delete_file_lookup(file)
         db.commit()
