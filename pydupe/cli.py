@@ -13,7 +13,7 @@ from pydupe.db import PydupeDB
 click.rich_click.USE_MARKDOWN = True
 
 @click.group()
-@click.option('-db', '--dbname', required=False, default=p.home() / '.pydupe.sqlite', show_default=True, help='sqlite Database', type=click.Path(path_type=p))
+@click.option('-db', '--dbname', required=False, default=p.home() / '.pydupe.sqlite', show_default=True, help='sqlite Database', type=click.Path(path_type=p)) # type: ignore
 @click.version_option()
 @click.pass_context
 def cli(ctx: click.Context, dbname: p) -> None:
@@ -40,9 +40,9 @@ def lst(ctx: click.Context, depth: int) -> None:
 @click.option('--dupes_global/--dupes_local', default=True, show_default=True, help='consider dupes outside chosen directory')
 @click.option('--do_move', is_flag=True, default=False, show_default=True, help='dupes are moved only if this flag is set')
 @click.option('--delete/--trash', default=False, show_default=True, help='delete dupes or use trash')
-@click.option('-tr', '--trash', required=False, default=p.home() / '.pydupeTrash', show_default=True, help='path to Trash. If set to "DELETE", no trash is used.', type=click.Path(path_type=p))
-@click.option('-of', '--outfile', required=False, default=p.home() / 'dupestree.html', show_default=True, help='html output for inspection in browser', type=click.Path(path_type=p))
-@click.argument('deldir', required=True, type=click.Path(exists=True, path_type=p))
+@click.option('-tr', '--trash', required=False, default=p.home() / '.pydupeTrash', show_default=True, help='path to Trash. If set to "DELETE", no trash is used.', type=click.Path(path_type=p)) # type: ignore
+@click.option('-of', '--outfile', required=False, default=p.home() / 'dupestree.html', show_default=True, help='html output for inspection in browser', type=click.Path(path_type=p)) # type: ignore
+@click.argument('deldir', required=True, type=click.Path(exists=True, path_type=p)) # type: ignore
 @click.argument('pattern', required=False, default=".")
 @click.pass_context
 def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global: bool, do_move: bool, delete: bool, trash: p, outfile: p, deldir: p, pattern: str) -> None:
@@ -84,7 +84,7 @@ def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global
 
 
 @cli.command()
-@click.argument('path', required=True, type=click.Path(exists=True, path_type=p))
+@click.argument('path', required=True, type=click.Path(exists=True, path_type=p)) # type: ignore
 @click.pass_context
 def hash(ctx: click.Context, path: p) -> None:
     """
