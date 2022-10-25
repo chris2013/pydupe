@@ -1,7 +1,6 @@
 import logging
 import typing
 from datetime import datetime
-from fcntl import F_SEAL_SEAL
 from pathlib import Path as p
 
 import rich_click as click
