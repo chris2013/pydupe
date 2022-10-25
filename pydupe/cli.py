@@ -36,9 +36,9 @@ def lst(ctx: click.Context, depth: int) -> None:
 
 @cli.command()
 @click.option('--match_deletions/--match_keeps', default=True, show_default=True, help='chooose [PATTERN] matches to select dupes to delete or dupes to keep.')
-@click.option('--autoselect', is_flag=True, default=False, help='autoselect dupes if all are matched')
+@click.option('--autoselect', is_flag=True, default=False, show_default = True, help='autoselect dupes if all are matched')
 @click.option('--dupes_global/--dupes_local', default=True, show_default=True, help='consider dupes outside chosen directory')
-@click.option('--do_move', is_flag=True, default=False, show_default=True, help='dupes are movedi if this flag is set')
+@click.option('--do_move', is_flag=True, default=False, show_default=True, help='dupes are moved only if this flag is set')
 @click.option('--delete/--trash', default=False, show_default=True, help='delete dupes or use trash')
 @click.option('-tr', '--trash', required=False, default=p.home() / '.pydupeTrash', show_default=True, help='path to Trash. If set to "DELETE", no trash is used.', type=click.Path(path_type=p))
 @click.option('-of', '--outfile', required=False, default=p.home() / 'dupestree.html', show_default=True, help='html output for inspection in browser', type=click.Path(path_type=p))
@@ -49,13 +49,13 @@ def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global
     """
     Dedupe Directory. Type dd --help for details.
     
-    1) Dupes are selected by regex search PATTERN within DELDIR. PATTERN is optional and defaults to '.' (any character).
+    - Dupes are selected by regex search PATTERN within DELDIR. PATTERN is optional and defaults to '.' (any character).
        Note the regex search (not match).
-    2) Hits within DELDIR are marked as dupes to delete (if match_deletions, default) or dupes to keep (if match_keeps).
-    3) If dupes_global is True (default), all dupes outside DELDIR are taken into account:
+    - Hits within DELDIR are marked as dupes to delete (if match_deletions, default) or dupes to keep (if match_keeps).
+    - If dupes_global is True (default), all dupes outside DELDIR are taken into account:
         - if match_deletions, they are added to the list of dupes to keep,
         - if match_keeps, they are marked for deletion.
-    4) if autoselect ist True and all dupes of a files are marked for deletion, one of them is deselected;
+    - if autoselect ist True and all dupes of a files are marked for deletion, one of them is deselected;
        if autoselect is False (the default), no deletion is performed if for a hash dupes are not contained in keeptable.
     if do_move is False, a dry run is done and a pretty printed table is shown and saved as html for further inspection.
     
