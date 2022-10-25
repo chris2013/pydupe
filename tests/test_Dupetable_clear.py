@@ -6,7 +6,7 @@ import pydupe.dupetable as dupetable
 import pydupe.hasher
 import pytest
 from click.testing import CliRunner
-from pydupe import cmd_hash
+from pydupe import cmd
 from pydupe.cli import cli
 from pydupe.db import PydupeDB
 

@@ -9,7 +9,7 @@ import rich_click as click
 import pydupe.dupetable as dupetable
 from pydupe.console import console
 from pydupe.db import PydupeDB
-from pydupe.cmd_hash import cmd_hash
+from pydupe.cmd import cmd_hash, cmd_purge
 
 
 @click.group()
@@ -96,13 +96,19 @@ def hash(ctx: click.Context, path: pathlib.Path) -> None:
 @click.pass_context
 def purge(ctx: click.Context) -> None:
     """
-    purge database
+    purge database: delete lookup and all files in permanent that are not available anymore
     """
     dbname = ctx.obj['dbname']
+    cmd_purge(dbname)
 
-    PydupeDB(dbname).purge()
-
-
+@cli.command()
+@click.pass_context
+def clean(ctx: click.Context) -> None:
+    """
+    clean database: delete lookup
+    """
+    dbname = ctx.obj['dbname']
+    cmd_purge(dbname)
 @cli.command()
 def help() -> None:
     """

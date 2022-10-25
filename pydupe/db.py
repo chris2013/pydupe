@@ -73,9 +73,21 @@ class PydupeDB(object):
         delete_sql = "DELETE FROM lookup WHERE filename LIKE ?"
         return self.cur.execute(delete_sql, (dirname_str + '%',))
 
-    def delete_file(self, filename: pathlib.Path) -> sqlite3.Cursor:
-        delete_sql = "DELETE from lookup where filename like ?"
+    def delete_file_lookup(self, filename: pathlib.Path) -> sqlite3.Cursor:
+        delete_sql = "DELETE from lookup where filename is ?"
         return self.cur.execute(delete_sql, (str(filename),))
+
+    def delete_file_permanent(self, filename: pathlib.Path) -> sqlite3.Cursor:
+        delete_sql = "DELETE from permanent where filename is ?"
+        return self.cur.execute(delete_sql, (str(filename),))
+
+    def get_files_in_permanent(self) -> sqlite3.Cursor: 
+        get_sql = "SELECT filename FROM permanent"
+        return self.cur.execute(get_sql)
+
+    def clean_lookup(self) -> sqlite3.Cursor: 
+        get_sql = "DELETE FROM lookup"
+        return self.cur.execute(get_sql)
 
     def copy_dir_to_table_permanent(self, dirname: pathlib.Path) -> sqlite3.Cursor:
         assert dirname.is_absolute()
@@ -108,13 +120,6 @@ class PydupeDB(object):
     def close(self) -> None:
         self.connection.close()
 
-    def purge(self) -> None:
-        copy_sql = "REPLACE INTO permanent select * FROM lookup"
-        self.cur.execute(copy_sql)
-        delete_sql = "DELETE from lookup"
-        self.cur.execute(delete_sql)
-        self.commit()
-
     # for testing only
     def get(self) -> sqlite3.Cursor:
         get_sql = "SELECT * FROM lookup"
@@ -128,8 +133,14 @@ class PydupeDB(object):
 
     # for testing only
     def get_file_hash(self) -> sqlite3.Cursor:
-        get_sql = "SELECT filename, hash from lookup"
+        get_sql = "SELECT filename, hash FROM lookup"
         return self.cur.execute(get_sql)
+
+    # for testing only
+    def copy_lookup_to_permanent(self) -> sqlite3.Cursor:
+        get_sql = "REPLACE INTO permanent SELECT * FROM lookup"
+        return self.cur.execute(get_sql)
+
 
 
 

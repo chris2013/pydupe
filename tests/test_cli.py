@@ -8,6 +8,11 @@ from click.testing import CliRunner
 from pydupe.cli import cli
 import typing as tp
 
+from pydupe.db import PydupeDB
+from pydupe.utils import P, S
+
+
+runner = CliRunner()
 
 @pytest.fixture()
 def setup_tmp_path() -> tp.Iterator[pathlib.Path]:
@@ -50,7 +55,7 @@ def setup_tmp_path() -> tp.Iterator[pathlib.Path]:
         target_lst = [somefile1_cpy, somefile2_cpy, somefile3_cpy,
                       somefile4_cpy, somefile5_cpy, somefile6_cpy]
         for source, target in zip(source_lst, target_lst):
-            shutil.copy2(src = source, dst= target, follow_symlinks=False )
+            shutil.copy2(src=source, dst=target, follow_symlinks=False)
 
         runner = CliRunner()
         runner.invoke(cli, ['--dbname', dbname, 'hash', tmpdirname])
@@ -148,35 +153,47 @@ class TestCLI:
         assert result == {'file1', 'file2',
                           'file3', 'file4', 'file5', 'file6', }
 
-    def test_delete_file(self, setup_tmp_path: pathlib.Path) -> None:
+    def test_purge(self, setup_tmp_path: pathlib.Path) -> None:
         tmpdirname = setup_tmp_path
-        trash = tmpdirname / '.pydupeTrash'
-        trash.mkdir()
+        dbname = tmpdirname / '.testdb.sqlite'
+        added_file = tmpdirname / 'addedfile'
+        added_file.write_text('some text')
+        added_file2 = tmpdirname / 'addedfile2'
+        added_file2.write_text('some text')
 
-        path = pathlib.Path(str(trash) + str(tmpdirname) + '/somedir/somedir2')
-        path.mkdir(parents=True)
-        fileexist1 = path.joinpath('file1')
-        fileexist1.write_text('some content 1')
+        runner.invoke(cli, ['--dbname', str(dbname), 'hash', '.'])
 
-        fileexist2 = path.joinpath('file1_1')
-        fileexist2.write_text('some content 1')
+        added_file.unlink()
 
-        runner = CliRunner()
-        runner.invoke(cli, ['--dbname', str(tmpdirname / '.testdb.sqlite'),
-                     'dd', '--delete', '--do_move', 'somedir/somedir2'])
+        with PydupeDB(dbname) as db:
+            db.copy_lookup_to_permanent()
+            filelist_in_permanent = [x['filename']
+                                     for x in db.get_files_in_permanent()]
+        assert str(added_file) in filelist_in_permanent
+        assert str(added_file2) in filelist_in_permanent
 
-        result = set()
-        fldr = tmpdirname / 'somedir/somedir2'
-        for child in fldr.rglob('*'):
-            if child.is_file():
-                result.add(child.name)
+        runner.invoke(cli, ['--dbname', str(dbname), 'purge'])
 
-        assert result == set()
+        with PydupeDB(dbname) as db:
+            filelist_in_permanent = [x['filename']
+                                     for x in db.get_files_in_permanent()]
 
-        result = set()
-        fldr = tmpdirname
-        for child in fldr.rglob('*'):
-            if child.is_dir():
-                result.add(child.name)
+        assert str(added_file) not in filelist_in_permanent
+        assert str(added_file2) in filelist_in_permanent
 
-        assert 'DELETE' not in result
+    def test_clean(self, setup_tmp_path: pathlib.Path) -> None:
+        tmpdirname = setup_tmp_path
+        dbname = tmpdirname / '.testdb.sqlite'
+
+        with PydupeDB(dbname) as db:
+            filelist_in_lookup = sorted(
+                [S(P(x['filename']).relative_to(tmpdirname)) for x in db.get()])
+        assert filelist_in_lookup == ['somedir/file1_cpy', 'somedir/file2_cpy', 'somedir/file3_cpy', 'somedir/file4_cpy', 'somedir/file5_cpy', 'somedir/file6_cpy',
+                                      'somedir/somedir2/file1', 'somedir/somedir2/file2', 'somedir/somedir2/file3', 'somedir/somedir2/file4', 'somedir/somedir2/file5', 'somedir/somedir2/file6']
+
+        runner.invoke(cli, ['--dbname', str(dbname), 'clean'])
+
+        with PydupeDB(dbname) as db:
+            filelist_in_lookup = sorted(
+                [S(P(x['filename']).relative_to(tmpdirname)) for x in db.get()])
+        assert filelist_in_lookup == []

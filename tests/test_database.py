@@ -291,7 +291,7 @@ class TestDatabase:
         
         dbname = pl.Path.cwd() / ".dbtest.sqlite"
         with PydupeDB(dbname) as db:
-            db.delete_file(filename=pl.Path('/tests/tdata/file_exists'))
+            db.delete_file_lookup(filename=pl.Path('/tests/tdata/file_exists'))
             data_get = db.get_file_hash().fetchall()
         
         data_dict = [dict(row) for row in data_get]

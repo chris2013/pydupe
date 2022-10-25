@@ -233,7 +233,7 @@ def dd3(dupes: LuTable[str, pl.Path], *, deldir: pl.Path, pattern: str, match_de
 class Dupes:
 
     def __init__(self, dbname: pl.Path = pl.Path.home() / ".pydupe.sqlite") -> None:
-        self.dupes = get_dupes(dbname)
+        self.dupes: LuTable[str, pl.Path] = get_dupes(dbname)
 
     def get_dir_counter(self) -> tp.Counter[str]:
         alldupes = self.dupes.chain_values()
@@ -351,7 +351,7 @@ class Dupetable(Dupes):
                     for delfile in chunk:
                         console.print(move_file_to_trash(
                             file=delfile, trash=trash, delete=delete))
-                        db.delete_file(filename=delfile)
+                        db.delete_file_lookup(filename=delfile)
                     db.commit()
 
                 progress.update(task_move_file_to_trash, advance=1)

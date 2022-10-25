@@ -105,5 +105,5 @@ def clean(dbname: pathlib.Path) -> None:
 
     with PydupeDB(dbname) as db:
         for file in (pathlib.Path(x) for x in list_of_files_to_update if not pathlib.Path(x).is_file()):
-            db.delete_file(file)
+            db.delete_file_lookup(file)
         db.commit()
