@@ -2,7 +2,7 @@ from  pathlib import Path as p
 import typing as tp
 
 import pydupe.hasher
-from pydupe.console import console
+from pydupe.console import console, spinner
 from pydupe.db import PydupeDB
 from pydupe.utils import mytimer
 
@@ -27,6 +27,8 @@ def cmd_hash(dbname: p, path: p) -> None:
     console.print(
         f"[green] scanned {number_scanned} and hashed thereof {number_hashed} files in {t.get} sec")
 
+
+@spinner(console, "purging database")
 def cmd_purge(dbname: p) -> None:
     delfiles: list[p]= []
     with PydupeDB(dbname) as db:
