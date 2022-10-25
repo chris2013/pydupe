@@ -10,6 +10,7 @@ from pydupe.cmd import cmd_hash, cmd_purge
 from pydupe.console import console
 from pydupe.db import PydupeDB
 
+click.rich_click.USE_MARKDOWN = True
 
 @click.group()
 @click.option('-db', '--dbname', required=False, default=p.home() / '.pydupe.sqlite', show_default=True, help='sqlite Database', type=click.Path(path_type=p))
@@ -47,7 +48,7 @@ def lst(ctx: click.Context, depth: int) -> None:
 def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global: bool, do_move: bool, delete: bool, trash: p, outfile: p, deldir: p, pattern: str) -> None:
     """
     Dedupe Directory. Type dd --help for details.
-    \b
+    
     1) Dupes are selected by regex search PATTERN within DELDIR. PATTERN is optional and defaults to '.' (any character).
        Note the regex search (not match).
     2) Hits within DELDIR are marked as dupes to delete (if match_deletions, default) or dupes to keep (if match_keeps).
@@ -57,6 +58,7 @@ def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global
     4) if autoselect ist True and all dupes of a files are marked for deletion, one of them is deselected;
        if autoselect is False (the default), no deletion is performed if for a hash dupes are not contained in keeptable.
     if do_move is False, a dry run is done and a pretty printed table is shown and saved as html for further inspection.
+    
     """
     option: typing.Dict[str, typing.Any] = {}
     option['dbname'] = ctx.obj['dbname']
