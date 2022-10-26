@@ -1,16 +1,19 @@
 import logging
+from turtle import left, right
 import typing
 from datetime import datetime
 from pathlib import Path as p
 
 import rich_click as click
+from rich import print
+from rich.panel import Panel
 
 import pydupe.dupetable as dupetable
 from pydupe.cmd import cmd_hash, cmd_purge, cmd_clean
 from pydupe.console import console
 from pydupe.db import PydupeDB
 
-click.rich_click.USE_MARKDOWN = True
+#click.rich_click.USE_MARKDOWN = True
 
 @click.group()
 @click.option('-db', '--dbname', required=False, default=p.home() / '.pydupe.sqlite', show_default=True, help='sqlite Database', type=click.Path(path_type=p)) # type: ignore
@@ -48,7 +51,8 @@ def lst(ctx: click.Context, depth: int) -> None:
 def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global: bool, do_move: bool, delete: bool, trash: p, outfile: p, deldir: p, pattern: str) -> None:
     """
     Dedupe Directory. Type dd --help for details.
-    
+
+    \b 
     - Dupes are selected by regex search PATTERN within DELDIR. PATTERN is optional and defaults to '.' (any character).
        Note the regex search (not match).
     - Hits within DELDIR are marked as dupes to delete (if match_deletions, default) or dupes to keep (if match_keeps).
@@ -116,13 +120,18 @@ def help() -> None:
     """
     Display some useful expressions for exiftool.
     """
-    click.echo("\nembedded exiftool help:")
-    click.echo(
-        "show dateTimeOriginal for all files:\texiftool -p '$filename $dateTimeOriginal' .")
-    click.echo(
-        "set dateTimeOrginial for all files: \texiftool -dateTimeOriginal='YYYY:mm:dd HH:MM:SS' .")
-    click.echo(
-        "rename files: \t\t\t\texiftool -filename=newname . {%f: filename %e: extension %c copynumber}")
-    click.echo("move file in dir to newdir/YEAR/MONTH: \texiftool -progress -recurse '-Directory<DateTimeOriginal' -d newdir/%Y/%m dir")
-    click.echo("\n\nembedded unix tool help:")
-    click.echo("find/delete empty dirs: \t\t\tfind . -type d -empty <-delete>")
+    
+    exiftool_help= """
+    [blue]show dateTimeOriginal for all files:\t[magenta]exiftool -p '$filename $dateTimeOriginal' .
+    [blue]set dateTimeOrginial for all files: \t[magenta]exiftool -dateTimeOriginal='YYYY:mm:dd HH:MM:SS' .
+    [blue]rename files: \t\t\t\t[magenta]exiftool -filename=newname . {%f: filename %e: extension %c copynumber}
+    [blue]move file in dir to newdir/YEAR/MONTH: \t[magenta]exiftool -progress -recurse '-Directory<DateTimeOriginal' -d newdir/%Y/%m dir
+    """ 
+    print() 
+    print(Panel(exiftool_help, title = "[green] embedded exiftool help"))
+    
+    unixtool_help = """
+    [blue]find/delete empty dirs: \t\t\t[magenta]find . -type d -empty <-delete>
+    """
+    print()
+    print(Panel(unixtool_help, title = "[green] embedded unix tool help"))
