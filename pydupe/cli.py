@@ -83,8 +83,14 @@ def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global
         with console.pager(styles=True):
             console.print(f"[red]deletions: {dels} [green]keeps: {keeps}")
             console.print(dupestree)
+
     if not do_move and outfile:
-        pass
+        console.record = True
+        console.print(f"[red]deletions: {dels} [green]keeps: {keeps}")
+        console.print(dupestree)
+        console.save_html(str(outfile))
+        console.record = False
+
     if do_move:
         Dt.delete(trash, delete)
 
