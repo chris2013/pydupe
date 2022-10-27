@@ -4,7 +4,6 @@ import typing
 from datetime import datetime
 from os import environ
 from pathlib import Path as p
-from turtle import left, right
 
 import rich_click as click
 from rich import print
@@ -47,7 +46,7 @@ def lst(ctx: click.Context, depth: int) -> None:
 @click.option('--do_move', is_flag=True, default=False, show_default=True, help='dupes are moved only if this flag is set')
 @click.option('--delete/--trash', default=False, show_default=True, help='delete dupes or use trash')
 @click.option('-tr', '--trash', required=False, default=p.home() / '.pydupeTrash', show_default=True, help='path to Trash. If set to "DELETE", no trash is used.', type=click.Path(path_type=p)) # type: ignore
-@click.option('-of', '--outfile', required=False, default=p.home() / 'dupestree.html', show_default=True, help='html output for inspection in browser', type=click.Path(path_type=p)) # type: ignore
+@click.option('-of', '--outfile', required=False, default=None, show_default=True, help='if given, html output is written to this file', type=click.Path(path_type=p)) # type: ignore
 @click.argument('deldir', required=True, type=click.Path(exists=True, path_type=p)) # type: ignore
 @click.argument('pattern', required=False, default=".")
 @click.pass_context
@@ -80,11 +79,12 @@ def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global
     dupestree, dels, keeps = Dt.get_tree()
 
 
-    if not do_move:
+    if not do_move and not outfile:
         with console.pager(styles=True):
             console.print(f"[red]deletions: {dels} [green]keeps: {keeps}")
             console.print(dupestree)
-
+    if not do_move and outfile:
+        pass
     if do_move:
         Dt.delete(trash, delete)
 
