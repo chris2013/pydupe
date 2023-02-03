@@ -1,19 +1,21 @@
 import logging
-from turtle import left, right
+from re import I
 import typing
 from datetime import datetime
+from os import environ
 from pathlib import Path as p
 
 import rich_click as click
 from rich import print
+from rich.console import Console
 from rich.panel import Panel
 
 import pydupe.dupetable as dupetable
-from pydupe.cmd import cmd_hash, cmd_purge, cmd_clean
+from pydupe.cmd import cmd_clean, cmd_hash, cmd_purge
 from pydupe.console import console
 from pydupe.db import PydupeDB
 
-#click.rich_click.USE_MARKDOWN = True
+environ["PAGER"] = "less -r"
 
 @click.group()
 @click.option('-db', '--dbname', required=False, default=p.home() / '.pydupe.sqlite', show_default=True, help='sqlite Database', type=click.Path(path_type=p)) # type: ignore
@@ -44,7 +46,7 @@ def lst(ctx: click.Context, depth: int) -> None:
 @click.option('--do_move', is_flag=True, default=False, show_default=True, help='dupes are moved only if this flag is set')
 @click.option('--delete/--trash', default=False, show_default=True, help='delete dupes or use trash')
 @click.option('-tr', '--trash', required=False, default=p.home() / '.pydupeTrash', show_default=True, help='path to Trash. If set to "DELETE", no trash is used.', type=click.Path(path_type=p)) # type: ignore
-@click.option('-of', '--outfile', required=False, default=p.home() / 'dupestree.html', show_default=True, help='html output for inspection in browser', type=click.Path(path_type=p)) # type: ignore
+@click.option('-of', '--outfile', required=False, default=None, show_default=True, help='if given, html output is written to this file', type=click.Path(path_type=p)) # type: ignore
 @click.argument('deldir', required=True, type=click.Path(exists=True, path_type=p)) # type: ignore
 @click.argument('pattern', required=False, default=".")
 @click.pass_context
@@ -76,16 +78,21 @@ def dd(ctx: click.Context, match_deletions: bool, autoselect: bool, dupes_global
 
     dupestree, dels, keeps = Dt.get_tree()
 
-    console.record = True
-    console.print(f"[red]deletions: {dels} [green]keeps: {keeps}")
-    console.print(dupestree)
-    if outfile:
+
+    if not do_move and not outfile:
+        with console.pager(styles=True):
+            console.print(f"[red]deletions: {dels} [green]keeps: {keeps}")
+            console.print(dupestree)
+
+    if not do_move and outfile:
+        console.record = True
+        console.print(f"[red]deletions: {dels} [green]keeps: {keeps}")
+        console.print(dupestree)
         console.save_html(str(outfile))
-    console.record = False
+        console.record = False
 
     if do_move:
         Dt.delete(trash, delete)
-
 
 @cli.command()
 @click.argument('path', required=True, type=click.Path(exists=True, path_type=p)) # type: ignore

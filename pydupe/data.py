@@ -1,11 +1,13 @@
 from typing import Optional, NamedTuple
 from pathlib import Path as p
+from dataclasses import dataclass
 import sqlite3
 import re
 
 valid_sha256 = re.compile(r"^[a-f0-9]{64}(:.+)?$", re.IGNORECASE)
 
-class fparms(NamedTuple):
+@dataclass(order=True, frozen=True, slots=True)
+class fparms:
     filename: Optional[str] = None
     hash: Optional[str] = None
     size: Optional[int] = None
