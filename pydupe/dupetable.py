@@ -341,9 +341,16 @@ class Dupetable(Dupes):
         filelist_chunked = list(
             chunked(self._deltable.chain_values(), 20))
 
+        if delete:
+            displaytext_plan = "[red]deleting files ..."
+            displaytext_done = "[green]deleted "
+        else:
+            displaytext_plan = "[red]moving files to trash ..."
+            displaytext_done = "[gren]moved "
+
         with Progress(console=console) as progress:
             task_move_file_to_trash = progress.add_task(
-                "[red]moving files to trash ...", total=len(filelist_chunked))
+                displaytext_plan, total=len(filelist_chunked))
 
             for chunk in filelist_chunked:
                 with PydupeDB(self._dbname) as db:
@@ -355,5 +362,5 @@ class Dupetable(Dupes):
 
                 progress.update(task_move_file_to_trash, advance=1)
 
-            console.print("[green]moved " +
+            console.print(displaytext_done +
                           str(len(self._deltable)) + " files\n")
