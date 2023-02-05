@@ -1,7 +1,5 @@
-import logging
 from re import I
 import typing
-from datetime import datetime
 from os import environ
 from pathlib import Path as p
 
