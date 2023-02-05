@@ -142,3 +142,18 @@ def help() -> None:
     """
     print()
     print(Panel(unixtool_help, title = "[green] embedded unix tool help"))
+
+@cli.command()
+@click.argument('deldir', required=True, type=click.Path(exists=True, path_type=p)) # type: ignore
+@click.argument('pattern', required=False, default=".")
+@click.pass_context
+def test(ctx: click.Context, deldir: p, pattern: str) -> None:
+    """
+    This is only for debugging: Test what pattern makes it to the code.
+
+    \b 
+    For Test Purpose only
+    
+    """
+    console.print(f"the Pattern that made it to me: [green]{pattern}")
+
