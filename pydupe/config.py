@@ -9,6 +9,8 @@ if SYSTEM_ == 'Linux':
     HASHEXECUTE_1 = ['sha256sum']
 elif SYSTEM_ == 'FreeBSD':
     HASHEXECUTE_1 = ['shasum', '-a', '256']
+elif SYSTEM_ == 'Darwin':
+    HASHEXECUTE_1 = ['shasum', '-a', '256']
 else:
     raise SystemExit("pydupe not yet verified on " + SYSTEM_)
 cnf : tp.Dict[str, tp.Any]= {}
